@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Kuncheng (Quin) Wu: embodied AI and air-ground robotics research at UC Berkeley. VLM control, robot memory, tool-using video agents.">
+<meta name="description" content="Kuncheng (Quin) Wu: embodied AI at UC Berkeley. VLMs as robot policies, VLM post-training, embodied memory.">
 <meta property="og:title" content="Kuncheng Wu Research">
-<meta property="og:description" content="Robots that look, remember, and know when to look again.">
+<meta property="og:description" content="Turning vision-language models into robot policies.">
 <meta property="og:image" content="a/hero_ue.jpg">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Kuncheng Wu Research</title>
@@ -252,10 +252,10 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   <nav>
     <div class="who">Kuncheng Wu <span>/ Quin</span></div>
     <ul>
-      <li><a href="#sensing">Sensing</a></li>
-      <li><a href="#control">VLM control</a></li>
+      <li><a href="#control">VLM policies</a></li>
+      <li><a href="#video">Post-training</a></li>
       <li><a href="#memory">Memory</a></li>
-      <li><a href="#video">Video agents</a></li>
+      <li><a href="#sensing">Sensing</a></li>
       <li><a href="#publications">Publications</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -265,11 +265,11 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     <div class="hero-top">
       <div>
         <div class="ident">Kuncheng (Quin) Wu <span>· M.S. UC Berkeley ’26 · research with Virginia Tech</span></div>
-        <div class="eyebrow" style="margin-top:10px">Embodied AI · air–ground robotics · <b>UC Berkeley</b></div>
-        <h1 style="margin-top:14px">Robots that look, <em>remember</em>, and know when to look again.</h1>
+        <div class="eyebrow" style="margin-top:10px">Embodied AI · VLM policies · robot learning · <b>UC Berkeley</b></div>
+        <h1 style="margin-top:14px">Vision-language models as <em>robot policies</em>.</h1>
       </div>
       <div>
-        <p class="lede">I build simulation and robot pipelines where <b>a drone finds, a Go2 confirms</b>, vision-language models choose the actions, and an agent decides whether its memory is still good enough to answer.</p>
+        <p class="lede">I put <b>VLMs in the closed control loop</b> of simulated drones and quadrupeds, <b>post-train them</b> on tool-use trajectories (LoRA SFT on a 9B VLM, up to +10.6 points over answer-only SFT), and build benchmarks for when an embodied agent’s memory is still good enough to act on.</p>
         <div class="chips">
           <span class="chip on">NeurIPS 2026</span>
           <span class="chip">Accident Analysis &amp; Prevention 2026</span>
@@ -285,7 +285,7 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
 
     <figure class="console" style="margin:0" aria-label="Recorded simulation: a drone searches a street, reports a casualty, and a quadruped walks over to confirm it">
       <div class="console-bar">
-        <span>mission · aerial search → ground confirm · 40 s sim time</span>
+        <span>mission · drone search → Go2 handoff → confirm · 40 s sim time</span>
         <div class="seg" role="group" aria-label="Simulator">
           <button type="button" id="sim-ue" aria-pressed="true">Unreal · SimWorld</button>
           <button type="button" id="sim-isaac" aria-pressed="false">Isaac Sim · PhysX</button>
@@ -306,46 +306,15 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   </header>
 
   <div class="loop" aria-label="Research loop">
-    <a href="#sensing"><span class="k">perceive</span><h3>Sensing from two heights</h3><p>RGB, depth and instance segmentation from the drone and the dog, rendered per frame.</p></a>
-    <a href="#control"><span class="k">act</span><h3>VLMs in the control loop</h3><p>Qwen, InternVL and DeepSeek policies driving navigation, inspection and handoff.</p></a>
+    <a href="#control"><span class="k">act</span><h3>VLMs as robot policies</h3><p>Qwen, InternVL and DeepSeek driving navigation, inspection and air–ground handoff.</p></a>
+    <a href="#video"><span class="k">post-train</span><h3>Training VLM agents</h3><p>LoRA SFT of a 9B VLM on 2,955 tool-use trajectories, up to +10.6 points.</p></a>
     <a href="#memory"><span class="k">remember</span><h3>Memory that goes stale</h3><p>A three-day household where things move while the robot isn't looking.</p></a>
-    <a href="#video"><span class="k">reason</span><h3>Tool-using video agents</h3><p>Surgical video QA with timelines, frame inspection and instrument tools.</p></a>
+    <a href="#sensing"><span class="k">perceive</span><h3>Observation pipeline</h3><p>RGB, depth and instance segmentation from the drone and the dog, rendered per frame.</p></a>
   </div>
-
-  <section id="sensing">
-    <div class="sec-head">
-      <div><div class="eyebrow">perceive · SimWorld / UnrealCV</div><h2>Same frame, three sensors</h2></div>
-      <p>Every capture in the pipeline is a pose-locked triplet: RGB, a metric depth map, and an instance mask with one color per actor. Drag across the image to compare.</p>
-    </div>
-    <div class="console sensor">
-      <div class="wipe" id="wipe" style="aspect-ratio:16/9">
-        <img id="w-base" src="a/air_rgb.jpg" alt="RGB frame">
-        <img id="w-over" class="over" src="a/air_seg.jpg" alt="Segmentation of the same frame">
-        <div class="handle" id="w-handle"></div>
-        <span class="tag l">RGB</span><span class="tag r" id="w-tag">SEGMENTATION</span>
-        <input type="range" id="w-range" min="0" max="100" value="50" aria-label="Comparison position">
-      </div>
-      <div class="side">
-        <div class="seg" role="group" aria-label="Compare RGB with">
-          <button type="button" data-mode="seg" aria-pressed="true">Segmentation</button>
-          <button type="button" data-mode="depth" aria-pressed="false">Depth</button>
-        </div>
-        <div>
-          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
-          <div class="scenes" id="scenes-out"></div>
-        </div>
-        <div>
-          <div class="sublabel" style="margin-bottom:6px">Indoor · dynamic household</div>
-          <div class="scenes" id="scenes-in"></div>
-        </div>
-        <p class="note" id="w-note"></p>
-      </div>
-    </div>
-  </section>
 
   <section id="control">
     <div class="sec-head">
-      <div><div class="eyebrow">act · Virginia Tech, Xuan Wang group × SCEL · Jul 2026 –</div><h2>VLMs in the control loop</h2></div>
+      <div><div class="eyebrow">act · Virginia Tech, Xuan Wang group × SCEL · Jul 2026 –</div><h2>VLMs as closed-loop robot policies</h2></div>
       <p>Each step the model gets the robot's camera frame and a task prompt, and returns a JSON action that the simulator executes. Runs are recorded side by side so two models face the identical episode.</p>
     </div>
     <div class="console cl">
@@ -364,6 +333,24 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
       <div class="eyebrow" style="margin-bottom:14px">8 environments · 2 engines · hover or tap to fly through</div>
       <div class="envs" id="envs"></div>
       <p class="env-note">Each flythrough goes aerial overview → drone altitude → dog eye height. Used to choose maps for the closed-loop tasks.</p>
+    </div>
+  </section>
+
+  <section id="video">
+    <div class="surg">
+      <div>
+        <div class="eyebrow">post-train · Virginia Tech CS · ongoing</div>
+        <h2 style="font-size:clamp(30px,4.2vw,50px);font-weight:800;margin-top:10px">Post-training a VLM agent to reason with tools</h2>
+        <ul>
+          <li>A 9B VLM fine-tuned with LoRA on <b>2,955 tool-use trajectories</b>, evaluated on <b>3,877 questions</b> of surgical video QA.</li>
+          <li>The agent learns to call <b>temporal recognition, event timelines, targeted frame inspection</b> and instrument-focused tools before it answers.</li>
+          <li>Five-fold cross-fitting plus image-removal and misalignment ablations to study tool errors and transfer across hospitals.</li>
+        </ul>
+      </div>
+      <figure class="console dumb" style="margin:0">
+        <div class="sublabel" style="margin-bottom:6px">Accuracy, % · matched answer-only SFT → tool-augmented</div>
+        <svg id="dumb" viewBox="0 0 520 210" role="img" aria-label="Accuracy rises from 65.2 to 69.7 on CholecT50, 54.3 to 64.9 on HeiChole, and 47.7 to 55.1 on MultiBypass"></svg>
+      </figure>
     </div>
   </section>
 
@@ -413,21 +400,34 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     </div>
   </section>
 
-  <section id="video">
-    <div class="surg">
-      <div>
-        <div class="eyebrow">reason · Virginia Tech CS · ongoing</div>
-        <h2 style="font-size:clamp(30px,4.2vw,50px);font-weight:800;margin-top:10px">Tool-augmented surgical video reasoning</h2>
-        <ul>
-          <li>An agent that calls <b>temporal recognition, event timelines, targeted frame inspection</b> and instrument-focused tools before it answers.</li>
-          <li>A 9B VLM fine-tuned with LoRA on <b>2,955 tool-use trajectories</b>, evaluated on <b>3,877 questions</b>.</li>
-          <li>Five-fold cross-fitting plus image-removal and misalignment ablations to study tool errors and transfer across hospitals.</li>
-        </ul>
+  <section id="sensing">
+    <div class="sec-head">
+      <div><div class="eyebrow">perceive · the observations the policies see</div><h2>Same frame, three sensors</h2></div>
+      <p>Every capture in the SimWorld / UnrealCV pipeline is a pose-locked triplet: RGB, a metric depth map, and an instance mask with one color per actor. Drag across the image to compare.</p>
+    </div>
+    <div class="console sensor">
+      <div class="wipe" id="wipe" style="aspect-ratio:16/9">
+        <img id="w-base" src="a/air_rgb.jpg" alt="RGB frame">
+        <img id="w-over" class="over" src="a/air_seg.jpg" alt="Segmentation of the same frame">
+        <div class="handle" id="w-handle"></div>
+        <span class="tag l">RGB</span><span class="tag r" id="w-tag">SEGMENTATION</span>
+        <input type="range" id="w-range" min="0" max="100" value="50" aria-label="Comparison position">
       </div>
-      <figure class="console dumb" style="margin:0">
-        <div class="sublabel" style="margin-bottom:6px">Accuracy, % · matched answer-only SFT → tool-augmented</div>
-        <svg id="dumb" viewBox="0 0 520 210" role="img" aria-label="Accuracy rises from 65.2 to 69.7 on CholecT50, 54.3 to 64.9 on HeiChole, and 47.7 to 55.1 on MultiBypass"></svg>
-      </figure>
+      <div class="side">
+        <div class="seg" role="group" aria-label="Compare RGB with">
+          <button type="button" data-mode="seg" aria-pressed="true">Segmentation</button>
+          <button type="button" data-mode="depth" aria-pressed="false">Depth</button>
+        </div>
+        <div>
+          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
+          <div class="scenes" id="scenes-out"></div>
+        </div>
+        <div>
+          <div class="sublabel" style="margin-bottom:6px">Indoor · dynamic household</div>
+          <div class="scenes" id="scenes-in"></div>
+        </div>
+        <p class="note" id="w-note"></p>
+      </div>
     </div>
   </section>
 
@@ -482,7 +482,7 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   </section>
 
   <section id="contact" class="contact">
-    <div><h2>Let’s talk robots.</h2><p>Open to research collaborations and PhD roles in embodied AI, robot learning and multimodal models.</p></div>
+    <div><h2>Let’s talk robots.</h2><p>Open to full-time roles in robot learning, VLA and embodied foundation models, and to research collaborations.</p></div>
     <div class="mail"><code id="email">forwu_clrs@berkeley.edu</code><button class="btn" id="copy" type="button">Copy email</button></div>
   </section>
 </div>
@@ -749,5 +749,6 @@ $("#copy").addEventListener("click", async e => {
   setTimeout(() => btn.textContent = "Copy email", 1800);
 });
 </script>
+
 </body>
 </html>
