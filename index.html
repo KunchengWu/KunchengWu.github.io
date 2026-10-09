@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Kuncheng (Quin) Wu: embodied AI and air-ground robotics research at UC Berkeley. VLM control, robot memory, tool-using video agents.">
+<meta property="og:title" content="Kuncheng Wu Research">
+<meta property="og:description" content="Robots that look, remember, and know when to look again.">
+<meta property="og:image" content="a/hero_ue.jpg">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Kuncheng Wu Research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a mission console. Live sim footage leads, then sensor/closed-loop/memory "instruments",
+   each framed like a HUD panel; prose stays in a narrow column beside them. Single dark look by choice:
+   the footage and HUD overlays are dark, so the page frames them rather than fighting them. */
+:root {
+  color-scheme: dark;
+  --bg: #0D1115;
+  --panel: #141A20;
+  --panel-2: #1A222A;
+  --ink: #E7ECF0;
+  --muted: #8E9AA6;
+  --faint: #5A6672;
+  --rule: #26303A;
+  --drone: #5AA9FF;     /* drone path blue, as in the mission map */
+  --dog: #F4C542;       /* Go2 yellow */
+  --approach: #F08A4B;  /* dog-approach orange */
+  --confirm: #4FD18B;   /* confirm green */
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); }
+a { color: var(--dog); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--dog); outline-offset: 3px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--f-display); font-stretch: 112%; text-wrap: balance; margin: 0; line-height: 1.08; }
+p { margin: 0; }
+.mono, .hud { font-family: var(--f-mono); }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.eyebrow b { color: var(--dog); font-weight: 500; }
+section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--rule); }
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px 48px; align-items: end; margin-bottom: 36px; }
+.sec-head h2 { font-size: clamp(30px, 4.2vw, 50px); font-weight: 800; letter-spacing: -.01em; margin-top: 10px; }
+.sec-head p { color: var(--muted); max-width: 36em; }
+
+/* nav */
+nav { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; padding-block: 20px; }
+nav .who { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 17px; letter-spacing: .02em; }
+nav .who span { color: var(--muted); font-weight: 600; }
+nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; padding: 0; font-family: var(--f-mono); font-size: 13px; }
+nav a { color: var(--muted); text-decoration: none; }
+nav a:hover { color: var(--ink); }
+
+/* hero */
+.hero { padding-block: clamp(20px, 4vw, 48px) clamp(48px, 7vw, 88px); display: grid; gap: 28px; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px 48px; align-items: end; }
+.hero h1 { font-size: clamp(40px, 6.6vw, 82px); font-weight: 800; letter-spacing: -.025em; }
+.hero h1 em { font-style: normal; color: var(--dog); }
+.hero .lede { font-size: clamp(17px, 1.6vw, 19px); color: var(--muted); max-width: 32em; }
+.hero .lede b { color: var(--ink); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.chip { font-family: var(--f-mono); font-size: 12px; padding: 5px 10px; border: 1px solid var(--rule); border-radius: 4px; color: var(--ink); background: var(--panel); white-space: nowrap; }
+.chip.on { border-color: var(--dog); color: var(--dog); }
+.ident { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: clamp(18px, 2vw, 22px); }
+.ident span { font-family: var(--f-body); font-stretch: 100%; font-weight: 400; font-size: 15px; color: var(--muted); }
+.links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; font-family: var(--f-mono); font-size: 13px; }
+.links a::after { content: " ↗"; color: var(--faint); }
+.pub .more { font-family: var(--f-mono); font-size: 12.5px; margin-top: 8px; display: inline-block; }
+
+.console { border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); overflow: hidden; }
+.console-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 14px; border-bottom: 1px solid var(--rule); font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+.seg button { font: 500 12px var(--f-mono); color: var(--muted); background: transparent; border: 0; padding: 7px 12px; cursor: pointer; border-left: 1px solid var(--rule); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink); box-shadow: inset 0 -2px 0 var(--dog); }
+.seg button:hover { color: var(--ink); }
+.video-box { position: relative; aspect-ratio: 16 / 9; background: #000; max-width: 100%; }
+.video-box video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.phasebar { position: relative; display: grid; padding: 12px 14px 14px; gap: 8px; border-top: 1px solid var(--rule); }
+.track { position: relative; height: 26px; border-radius: 4px; overflow: hidden; display: flex; cursor: pointer; background: var(--panel-2); }
+.track > div { position: relative; height: 100%; font: 500 11px var(--f-mono); padding: 6px 8px; white-space: nowrap; overflow: hidden; color: #0D1115; opacity: .45; transition: opacity .2s; }
+.track > div.cur { opacity: 1; }
+.track .head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); left: 0; pointer-events: none; }
+.telemetry { display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.telemetry b { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+.hero-cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
+
+/* loop strip */
+.loop { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.loop > a { display: grid; gap: 6px; padding: 18px 18px 20px; border-left: 1px solid var(--rule); text-decoration: none; color: var(--ink); background: var(--panel); min-width: 0; }
+.loop > a:first-child { border-left: 0; }
+.loop > a:hover { background: var(--panel-2); }
+.loop .k { font-family: var(--f-mono); font-size: 12px; color: var(--dog); }
+.loop h3 { font-size: 19px; font-weight: 600; }
+.loop p { font-size: 15px; color: var(--muted); }
+
+/* sensor wipe */
+.sensor { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 0; }
+.wipe { position: relative; background: #000; overflow: hidden; touch-action: pan-y; cursor: ew-resize; user-select: none; max-width: 100%; }
+.wipe img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.wipe .over { clip-path: inset(0 0 0 50%); }
+.wipe .handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--ink); transform: translateX(-1px); pointer-events: none; }
+.wipe .handle::after { content: "◀ ▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font: 500 10px var(--f-mono); letter-spacing: 2px; color: var(--bg); background: var(--ink); padding: 6px 8px; border-radius: 99px; white-space: nowrap; }
+.wipe .tag { position: absolute; top: 10px; font: 500 11px var(--f-mono); padding: 3px 7px; border-radius: 3px; background: rgba(13,17,21,.78); color: var(--ink); pointer-events: none; }
+.wipe .tag.l { left: 10px; } .wipe .tag.r { right: 10px; }
+.wipe input[type=range] { position: absolute; inset: auto 0 0 0; width: 100%; opacity: 0; height: 1px; }
+.side { border-left: 1px solid var(--rule); padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.scenes { display: grid; gap: 2px; }
+.scenes button { text-align: left; font: 400 14px var(--f-body); color: var(--muted); background: transparent; border: 0; border-radius: 5px; padding: 7px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+.scenes button small { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+.scenes button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink); }
+.scenes button:hover { color: var(--ink); }
+.side .note { font-size: 14px; color: var(--muted); margin-top: auto; }
+.sublabel { font-family: var(--f-mono); font-size: 11px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; }
+
+/* closed loop */
+.cl { display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.tasks { display: grid; align-content: start; border-right: 1px solid var(--rule); }
+.tasks button { text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--rule); padding: 16px 18px; cursor: pointer; color: var(--muted); display: grid; gap: 4px; font: inherit; }
+.tasks button b { font-family: var(--f-display); font-stretch: 112%; font-size: 17px; color: var(--ink); font-weight: 600; }
+.tasks button span { font-size: 14px; line-height: 1.45; }
+.tasks button small { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+.tasks button[aria-pressed="true"] { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--dog); }
+.cl .stage { min-width: 0; display: grid; }
+.cl .video-box { aspect-ratio: 966 / 604; }
+.io { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.io > div { padding: 12px 14px; border-left: 1px solid var(--rule); min-width: 0; }
+.io > div:first-child { border-left: 0; }
+.io p { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.io code { font: 12px var(--f-mono); color: var(--dog); word-break: break-word; }
+
+/* environments */
+.envs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.env { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule); background: #000; aspect-ratio: 16 / 9; cursor: pointer; max-width: 100%; }
+.env img, .env video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.env video { opacity: 0; transition: opacity .25s; }
+.env.playing video { opacity: 1; }
+.env figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px; background: linear-gradient(transparent, rgba(0,0,0,.82)); font: 500 12px var(--f-mono); color: #E7ECF0; display: flex; justify-content: space-between; gap: 6px; }
+.env figcaption small { color: #A9B4BF; font-size: 11px; }
+.env-note { margin-top: 12px; font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
+
+/* memory */
+.mem-grid { display: grid; gap: 20px; }
+.daychart-wrap { padding: 16px 16px 10px; }
+.daychart-scroll { overflow-x: auto; }
+#day { display: block; width: 100%; min-width: 720px; height: auto; touch-action: pan-y; }
+#day text { font-family: var(--f-mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 12px var(--f-mono); color: var(--muted); padding: 10px 16px 14px; border-top: 1px solid var(--rule); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+.readout > div { padding: 10px 14px; border-left: 1px solid var(--rule); border-top: 1px solid var(--rule); margin: 0 0 -1px -1px; min-width: 0; }
+.readout .n { font: 500 12px var(--f-mono); color: var(--muted); }
+.readout .r { font-size: 15px; color: var(--ink); }
+.readout .s { font: 12px var(--f-mono); font-variant-numeric: tabular-nums; }
+.s.fresh { color: var(--confirm); } .s.aging { color: var(--dog); } .s.stale { color: var(--approach); } .s.none { color: var(--faint); }
+.policy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.flow { padding: 18px; display: grid; gap: 14px; }
+.flow-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: start; }
+.flow-row .sublabel { padding-top: 6px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font: 500 12.5px var(--f-mono); padding: 5px 10px; border-radius: 99px; border: 1px solid var(--rule); color: var(--ink); background: var(--panel-2); }
+.pill.answer { border-color: var(--confirm); color: var(--confirm); }
+.pill.inspect { border-color: var(--dog); color: var(--dog); }
+.pill.abstain { border-color: var(--approach); color: var(--approach); }
+.stats { display: flex; flex-wrap: wrap; gap: 28px; padding-top: 6px; }
+.stats b { display: block; font-family: var(--f-display); font-stretch: 112%; font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.stats small { font-size: 14px; color: var(--muted); }
+.clips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+.clips figure { margin: 0; border-left: 1px solid var(--rule); min-width: 0; }
+.clips figure:first-child { border-left: 0; }
+.clips video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #000; }
+.clips figcaption { padding: 8px 12px 10px; font: 12px var(--f-mono); color: var(--muted); }
+
+/* surgical */
+.surg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 20px 48px; align-items: start; }
+.surg ul { margin: 16px 0 0; padding-left: 18px; color: var(--muted); }
+.surg li + li { margin-top: 8px; }
+.surg li b { color: var(--ink); font-weight: 600; }
+.dumb { padding: 18px 18px 12px; }
+.dumb svg { width: 100%; height: auto; display: block; }
+.dumb text { font-family: var(--f-mono); }
+
+/* other work */
+.others { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.others article { padding: 20px; border-left: 1px solid var(--rule); display: grid; gap: 8px; align-content: start; background: var(--panel); min-width: 0; }
+.others article:first-child { border-left: 0; }
+.others h3 { font-size: 19px; font-weight: 600; }
+.others p { font-size: 15px; color: var(--muted); }
+.tagline { font: 11.5px var(--f-mono); color: var(--faint); }
+
+/* pubs + background */
+.pub { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 24px; padding-block: 22px; border-top: 1px solid var(--rule); }
+.pub:first-of-type { border-top: 0; padding-top: 0; }
+.pub .venue { font: 500 13px var(--f-mono); color: var(--dog); }
+.pub .venue small { display: block; color: var(--muted); font-weight: 400; }
+.pub h3 { font-family: var(--f-body); font-stretch: 100%; font-size: 20px; font-weight: 600; line-height: 1.35; }
+.pub p { font-size: 15px; color: var(--muted); margin-top: 6px; }
+.pub p b { color: var(--ink); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+.cols h3 { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
+.tl { list-style: none; margin: 0; padding: 0; }
+.tl li { display: grid; gap: 2px; padding: 12px 0; border-top: 1px dashed var(--rule); }
+.tl li:first-child { border-top: 0; padding-top: 0; }
+.tl .when { font: 12px var(--f-mono); color: var(--faint); font-variant-numeric: tabular-nums; }
+.tl b { font-weight: 600; }
+.tl span { font-size: 15px; color: var(--muted); }
+
+.contact { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; }
+.contact h2 { font-size: clamp(30px, 4.2vw, 50px); font-weight: 800; }
+.contact p { color: var(--muted); margin-top: 8px; max-width: 34em; }
+.mail { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.mail code { font: 15px var(--f-mono); padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); user-select: all; }
+.btn { font: 500 14px var(--f-mono); padding: 11px 16px; border-radius: 6px; border: 1px solid var(--dog); background: var(--dog); color: var(--bg); cursor: pointer; text-decoration: none; }
+footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint); border-top: 1px solid var(--rule); }
+
+@media (max-width: 920px) {
+  .hero-top, .sec-head, .policy, .surg { grid-template-columns: minmax(0, 1fr); }
+  .sensor, .cl { grid-template-columns: minmax(0, 1fr); }
+  .side { border-left: 0; border-top: 1px solid var(--rule); }
+  .scenes { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .tasks { border-right: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
+  .tasks button { border-left: 1px solid var(--rule); }
+  .envs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop > a:nth-child(3) { border-left: 0; }
+  .loop > a:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  .others, .cols { grid-template-columns: minmax(0, 1fr); }
+  .others article { border-left: 0; border-top: 1px solid var(--rule); }
+  .others article:first-child { border-top: 0; }
+}
+@media (max-width: 560px) {
+  .loop, .io, .clips, .tasks { grid-template-columns: minmax(0, 1fr); }
+  .loop > a { border-left: 0; border-top: 1px solid var(--rule); }
+  .loop > a:first-child { border-top: 0; }
+  .io > div, .clips figure { border-left: 0; border-top: 1px solid var(--rule); }
+  .io > div:first-child, .clips figure:first-child { border-top: 0; }
+  .pub { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .flow-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .track > div { font-size: 0; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="who">Kuncheng Wu <span>/ Quin</span></div>
+    <ul>
+      <li><a href="#sensing">Sensing</a></li>
+      <li><a href="#control">VLM control</a></li>
+      <li><a href="#memory">Memory</a></li>
+      <li><a href="#video">Video agents</a></li>
+      <li><a href="#publications">Publications</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="ident">Kuncheng (Quin) Wu <span>· M.S. UC Berkeley ’26 · research with Virginia Tech</span></div>
+        <div class="eyebrow" style="margin-top:10px">Embodied AI · air–ground robotics · <b>UC Berkeley</b></div>
+        <h1 style="margin-top:14px">Robots that look, <em>remember</em>, and know when to look again.</h1>
+      </div>
+      <div>
+        <p class="lede">I build simulation and robot pipelines where <b>a drone finds, a Go2 confirms</b>, vision-language models choose the actions, and an agent decides whether its memory is still good enough to answer.</p>
+        <div class="chips">
+          <span class="chip on">NeurIPS 2026</span>
+          <span class="chip">Accident Analysis &amp; Prevention 2026</span>
+          <span class="chip">M.S. UC Berkeley ’26</span>
+        </div>
+        <div class="links">
+          <a href="Kuncheng_Wu-CV.pdf" target="_blank" rel="noopener">CV (PDF)</a>
+          <a href="https://arxiv.org/abs/2610.10782" target="_blank" rel="noopener">NeurIPS paper (arXiv)</a>
+          <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7102038" target="_blank" rel="noopener">AA&amp;P paper (SSRN)</a>
+          <a href="https://github.com/KunchengWu" target="_blank" rel="noopener">GitHub</a>        </div>
+      </div>
+    </div>
+
+    <figure class="console" style="margin:0" aria-label="Recorded simulation: a drone searches a street, reports a casualty, and a quadruped walks over to confirm it">
+      <div class="console-bar">
+        <span>mission · aerial search → ground confirm · 40 s sim time</span>
+        <div class="seg" role="group" aria-label="Simulator">
+          <button type="button" id="sim-ue" aria-pressed="true">Unreal · SimWorld</button>
+          <button type="button" id="sim-isaac" aria-pressed="false">Isaac Sim · PhysX</button>
+        </div>
+      </div>
+      <div class="video-box">
+        <video id="hero-v" src="a/hero_ue.mp4" poster="a/hero_ue.jpg" muted loop playsinline autoplay preload="metadata"></video>
+      </div>
+      <div class="phasebar">
+        <div class="track" id="track" role="slider" tabindex="0" aria-label="Mission timeline" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0"></div>
+        <div class="telemetry" id="telemetry"></div>
+      </div>
+    </figure>
+    <div class="hero-cap">
+      <span>panels: chase camera · drone down-camera · Go2 front camera · top-down mission map</span>
+      <span>click the timeline to scrub</span>
+    </div>
+  </header>
+
+  <div class="loop" aria-label="Research loop">
+    <a href="#sensing"><span class="k">perceive</span><h3>Sensing from two heights</h3><p>RGB, depth and instance segmentation from the drone and the dog, rendered per frame.</p></a>
+    <a href="#control"><span class="k">act</span><h3>VLMs in the control loop</h3><p>Qwen, InternVL and DeepSeek policies driving navigation, inspection and handoff.</p></a>
+    <a href="#memory"><span class="k">remember</span><h3>Memory that goes stale</h3><p>A three-day household where things move while the robot isn't looking.</p></a>
+    <a href="#video"><span class="k">reason</span><h3>Tool-using video agents</h3><p>Surgical video QA with timelines, frame inspection and instrument tools.</p></a>
+  </div>
+
+  <section id="sensing">
+    <div class="sec-head">
+      <div><div class="eyebrow">perceive · SimWorld / UnrealCV</div><h2>Same frame, three sensors</h2></div>
+      <p>Every capture in the pipeline is a pose-locked triplet: RGB, a metric depth map, and an instance mask with one color per actor. Drag across the image to compare.</p>
+    </div>
+    <div class="console sensor">
+      <div class="wipe" id="wipe" style="aspect-ratio:16/9">
+        <img id="w-base" src="a/air_rgb.jpg" alt="RGB frame">
+        <img id="w-over" class="over" src="a/air_seg.jpg" alt="Segmentation of the same frame">
+        <div class="handle" id="w-handle"></div>
+        <span class="tag l">RGB</span><span class="tag r" id="w-tag">SEGMENTATION</span>
+        <input type="range" id="w-range" min="0" max="100" value="50" aria-label="Comparison position">
+      </div>
+      <div class="side">
+        <div class="seg" role="group" aria-label="Compare RGB with">
+          <button type="button" data-mode="seg" aria-pressed="true">Segmentation</button>
+          <button type="button" data-mode="depth" aria-pressed="false">Depth</button>
+        </div>
+        <div>
+          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
+          <div class="scenes" id="scenes-out"></div>
+        </div>
+        <div>
+          <div class="sublabel" style="margin-bottom:6px">Indoor · dynamic household</div>
+          <div class="scenes" id="scenes-in"></div>
+        </div>
+        <p class="note" id="w-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="control">
+    <div class="sec-head">
+      <div><div class="eyebrow">act · Virginia Tech, Xuan Wang group × SCEL · Jul 2026 –</div><h2>VLMs in the control loop</h2></div>
+      <p>Each step the model gets the robot's camera frame and a task prompt, and returns a JSON action that the simulator executes. Runs are recorded side by side so two models face the identical episode.</p>
+    </div>
+    <div class="console cl">
+      <div class="tasks" id="tasks"></div>
+      <div class="stage">
+        <div class="video-box"><video id="cl-v" muted loop playsinline preload="metadata"></video></div>
+        <div class="io">
+          <div><div class="sublabel">Robot</div><p id="io-robot"></p></div>
+          <div><div class="sublabel">Models compared</div><p id="io-models"></p></div>
+          <div><div class="sublabel">Action format</div><p><code id="io-action"></code></p></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px">
+      <div class="eyebrow" style="margin-bottom:14px">8 environments · 2 engines · hover or tap to fly through</div>
+      <div class="envs" id="envs"></div>
+      <p class="env-note">Each flythrough goes aerial overview → drone altitude → dog eye height. Used to choose maps for the closed-loop tasks.</p>
+    </div>
+  </section>
+
+  <section id="memory">
+    <div class="sec-head">
+      <div><div class="eyebrow">remember · robot memory benchmark · ongoing</div><h2>Answer, look again, or abstain?</h2></div>
+      <p>A replayable household where three people move 37 objects across two floors for three days. A patrolling dog only sees part of it. The question is when its memory is still good enough to answer.</p>
+    </div>
+
+    <div class="mem-grid">
+      <figure class="console" style="margin:0">
+        <div class="console-bar">
+          <span>Friday 06:00 – 24:00 · ground truth from the replay log</span>
+          <div class="seg" role="group" aria-label="Patrol budget" id="budget">
+            <button type="button" data-b="high" aria-pressed="false">High · every 2 h</button>
+            <button type="button" data-b="medium" aria-pressed="true">Medium · 3 h</button>
+            <button type="button" data-b="low" aria-pressed="false">Low · 4 h</button>
+          </div>
+        </div>
+        <div class="daychart-wrap">
+          <div class="daychart-scroll"><svg id="day" role="img" aria-label="Timeline of where each person and object is during Friday, with the robot dog's patrol windows"></svg></div>
+        </div>
+        <div class="readout" id="readout" aria-live="polite"></div>
+        <div class="legend" id="legend"></div>
+      </figure>
+
+      <div class="policy">
+        <div class="console flow">
+          <div class="flow-row"><span class="sublabel">Input</span><div class="pills"><span class="pill">sparse patrol observations</span><span class="pill">structured memory</span><span class="pill">question</span></div></div>
+          <div class="flow-row"><span class="sublabel">Evidence</span><div class="pills"><span class="pill">strong</span><span class="pill">weak</span><span class="pill">stale</span><span class="pill">insufficient</span></div></div>
+          <div class="flow-row"><span class="sublabel">Decision</span><div class="pills"><span class="pill answer">answer</span><span class="pill inspect">inspect · which room</span><span class="pill abstain">abstain</span></div></div>
+          <div class="stats">
+            <div><b>760</b><small>benchmark queries</small></div>
+            <div><b>4</b><small>evidence states</small></div>
+            <div><b>3</b><small>observation budgets</small></div>
+          </div>
+          <p style="font-size:15px;color:var(--muted)">The inspect target is scored from the agent's own evidence. Memory-reasoning errors are separated from perception errors, and structured memory is compared against last-seen images and MindJourney-generated views.</p>
+        </div>
+        <div class="console" style="display:grid;align-content:start">
+          <div class="console-bar"><span>what the patrol records · RGB at 15 s virtual-time steps</span></div>
+          <div class="clips">
+            <figure><video src="a/people_walk.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>people walking</figcaption></figure>
+            <figure><video src="a/pt_carry.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>object carried</figcaption></figure>
+            <figure><video src="a/pt_dog.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>dog's patrol view</figcaption></figure>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="video">
+    <div class="surg">
+      <div>
+        <div class="eyebrow">reason · Virginia Tech CS · ongoing</div>
+        <h2 style="font-size:clamp(30px,4.2vw,50px);font-weight:800;margin-top:10px">Tool-augmented surgical video reasoning</h2>
+        <ul>
+          <li>An agent that calls <b>temporal recognition, event timelines, targeted frame inspection</b> and instrument-focused tools before it answers.</li>
+          <li>A 9B VLM fine-tuned with LoRA on <b>2,955 tool-use trajectories</b>, evaluated on <b>3,877 questions</b>.</li>
+          <li>Five-fold cross-fitting plus image-removal and misalignment ablations to study tool errors and transfer across hospitals.</li>
+        </ul>
+      </div>
+      <figure class="console dumb" style="margin:0">
+        <div class="sublabel" style="margin-bottom:6px">Accuracy, % · matched answer-only SFT → tool-augmented</div>
+        <svg id="dumb" viewBox="0 0 520 210" role="img" aria-label="Accuracy rises from 65.2 to 69.7 on CholecT50, 54.3 to 64.9 on HeiChole, and 47.7 to 55.1 on MultiBypass"></svg>
+      </figure>
+    </div>
+  </section>
+
+  <section id="more">
+    <div class="sec-head">
+      <div><div class="eyebrow">also</div><h2>Hardware, scenes, and earlier work</h2></div>
+      <p>Before simulation: a real Go2, neural scene reconstruction, and graph models for transportation planning.</p>
+    </div>
+    <div class="others">
+      <article><span class="tagline">Unitree Go2 EDU · May 2025 – Mar 2026</span><h3>Autonomous quadruped navigation</h3><p>LiDAR–inertial SLAM, persistent point-cloud maps and Open3D ICP localization on an Orin NX, with ROS 2 / ROS 1 bridging and on-robot debugging.</p></article>
+      <article><span class="tagline">Jan 2026 –</span><h3>NeRF and 3DGS for world modeling</h3><p>Video-to-scene pipelines that test reconstruction quality, inference cost, and whether rebuilt scenes work for simulation and navigation.</p></article>
+      <article><span class="tagline">Tongji University · thesis</span><h3>Graph neural networks for airport siting</h3><p>A heterogeneous graph from GIS and socioeconomic data, a graph attention network for four-dimensional feasibility, and Pareto optimization over candidate sites.</p></article>
+    </div>
+  </section>
+
+  <section id="publications">
+    <div class="sec-head"><div><div class="eyebrow">accepted</div><h2>Publications</h2></div></div>
+    <div>
+      <div class="pub">
+        <div class="venue">NeurIPS 2026<small>Main Track · Poster</small></div>
+        <div><h3>VICO: Visual Environments Co-Evolving for Vision-Language Model Reasoning</h3>
+        <p>Meng Lu, Ligeng Zhu, Olivia Xiao, Yuchen Zhuang, Zihan Wang, <b>Kuncheng Wu</b>, Bangya Liu, Yu Wang, Charles Fleming, Wenqi Shi, Xuan Wang</p>
+        <p>My part: reproduced and ran the baseline methods for comparative evaluation, and ran model-training experiments inside the actor–environment co-evolution framework.</p>
+        <a class="more" href="https://arxiv.org/abs/2610.10782" target="_blank" rel="noopener">arXiv 2610.10782 ↗</a></div>
+      </div>
+      <div class="pub">
+        <div class="venue">AA&amp;P 2026<small>Accident Analysis &amp; Prevention</small></div>
+        <div><h3>Dynamic Prediction of Airport Taxiway Hotspots Using Spatio-Temporal Traffic and Kinematic Risk Modeling</h3>
+        <p>Qing Lyu*, Jinglei Zeng*, <b>Kuncheng Wu</b>*, Jasenka Rakas<sup>†</sup> · <span style="color:var(--dog)">* equal contribution (co-first authors) · † corresponding author</span></p>
+        <a class="more" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7102038" target="_blank" rel="noopener">SSRN preprint ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="background">
+    <div class="cols">
+      <div><h3>Education</h3><ol class="tl">
+        <li><span class="when">2025 – 2026</span><b>UC Berkeley</b><span>M.S. Civil &amp; Environmental Engineering, Transportation Systems · GPA 3.74</span></li>
+        <li><span class="when">2024 – 2025</span><b>UC Berkeley</b><span>Visiting Student, CEE · GPA 3.85</span></li>
+        <li><span class="when">2021 – 2025</span><b>Tongji University</b><span>B.Eng. Transportation Engineering · GPA 4.28 / 5</span></li>
+      </ol></div>
+      <div><h3>Other research &amp; industry</h3><ol class="tl">
+        <li><span class="when">2025 –</span><b>Shared micromobility optimization</b><span>UC Berkeley RA with Prof. Manxi Wu · stochastic MILP, incentives, queueing</span></li>
+        <li><span class="when">2023</span><b>Tongji Architectural Design &amp; Research Institute</b><span>Transport planning intern · Shantou Railway Station hub</span></li>
+      </ol></div>
+      <div><h3>Honors</h3><ol class="tl">
+        <li><span class="when">2024</span><b>MCM Meritorious Winner</b></li>
+        <li><span class="when">2023</span><b>CUMCM, Shanghai Third Prize</b></li>
+        <li><span class="when">2022</span><b>Shuwei Cup International MCM, Second Prize</b></li>
+      </ol></div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <div><h2>Let’s talk robots.</h2><p>Open to research collaborations and PhD roles in embodied AI, robot learning and multimodal models.</p></div>
+    <div class="mail"><code id="email">forwu_clrs@berkeley.edu</code><button class="btn" id="copy" type="button">Copy email</button></div>
+  </section>
+</div>
+<footer><div class="wrap">© 2026 Kuncheng Wu · Berkeley, CA · footage and frames from SimWorld (Unreal Engine) and Isaac Sim runs</div></footer>
+<script>const HOUSEHOLD = {"lanes":{"Dad":[[360,495,"master_bedroom"],[495,495,"entrance_hall"],[495,540,"kitchen_dining"],[540,540,"upper_landing"],[540,543,"master_bedroom"],[543,543,"entrance_hall"],[543,557,"garage"],[557,557,"upper_landing"],[557,560,"master_bedroom"],[560,575,"entrance_hall"],[575,592,"kitchen_dining"],[592,592,"upper_landing"],[592,595,"master_ensuite"],[595,595,"entrance_hall"],[595,610,"ground_bathroom"],[610,627,"kitchen_dining"],[627,645,"living_room"],[645,662,"kitchen_dining"],[662,665,"living_room"],[665,665,"upper_landing"],[665,680,"master_bedroom"],[680,683,"master_ensuite"],[683,683,"entrance_hall"],[683,697,"ground_bathroom"],[697,697,"upper_landing"],[697,700,"master_bedroom"],[700,700,"entrance_hall"],[700,715,"living_room"],[715,732,"kitchen_dining"],[732,732,"upper_landing"],[732,735,"master_bedroom"],[735,735,"entrance_hall"],[735,750,"living_room"],[750,795,"kitchen_dining"],[795,798,"garage"],[798,812,"kitchen_dining"],[812,815,"entrance_hall"],[815,815,"upper_landing"],[815,830,"master_bedroom"],[830,830,"entrance_hall"],[830,833,"kitchen_dining"],[833,848,"living_room"],[848,851,"ground_bathroom"],[851,851,"upper_landing"],[851,866,"master_ensuite"],[866,866,"entrance_hall"],[866,869,"kitchen_dining"],[869,901,"living_room"],[901,919,"kitchen_dining"],[919,919,"upper_landing"],[919,922,"master_bedroom"],[922,922,"entrance_hall"],[922,937,"living_room"],[937,940,"ground_bathroom"],[940,940,"upper_landing"],[940,955,"master_ensuite"],[955,955,"entrance_hall"],[955,958,"living_room"],[958,990,"kitchen_dining"],[990,1008,"living_room"],[1008,1011,"kitchen_dining"],[1011,1026,"living_room"],[1026,1026,"upper_landing"],[1026,1029,"master_bedroom"],[1029,1044,"entrance_hall"],[1044,1047,"living_room"],[1047,1062,"kitchen_dining"],[1062,1062,"upper_landing"],[1062,1065,"master_ensuite"],[1065,1065,"entrance_hall"],[1065,1080,"ground_bathroom"],[1080,1125,"kitchen_dining"],[1125,1128,"living_room"],[1128,1141,"kitchen_dining"],[1141,1157,"living_room"],[1157,1173,"kitchen_dining"],[1173,1190,"living_room"],[1190,1190,"upper_landing"],[1190,1193,"master_ensuite"],[1193,1193,"entrance_hall"],[1193,1206,"ground_bathroom"],[1206,1238,"kitchen_dining"],[1238,1258,"living_room"],[1258,1271,"kitchen_dining"],[1271,1274,"entrance_hall"],[1274,1274,"upper_landing"],[1274,1287,"master_bedroom"],[1287,1287,"entrance_hall"],[1287,1290,"kitchen_dining"],[1290,1303,"living_room"],[1303,1306,"ground_bathroom"],[1306,1306,"upper_landing"],[1306,1320,"master_ensuite"],[1320,1440,"master_bedroom"]],"Mom":[[360,495,"master_bedroom"],[495,495,"entrance_hall"],[495,540,"kitchen_dining"],[540,540,"upper_landing"],[540,560,"master_bedroom"],[560,575,"entrance_hall"],[575,575,"upper_landing"],[575,578,"master_ensuite"],[578,592,"laundry_room"],[592,595,"master_bedroom"],[595,595,"entrance_hall"],[595,610,"kitchen_dining"],[610,610,"upper_landing"],[610,613,"master_ensuite"],[613,613,"entrance_hall"],[613,627,"ground_bathroom"],[627,627,"upper_landing"],[627,630,"daughter_bedroom"],[630,630,"entrance_hall"],[630,645,"living_room"],[645,645,"upper_landing"],[645,648,"daughter_bedroom"],[648,648,"entrance_hall"],[648,662,"living_room"],[662,665,"kitchen_dining"],[665,680,"living_room"],[680,680,"upper_landing"],[680,683,"master_bedroom"],[683,683,"entrance_hall"],[683,700,"living_room"],[700,700,"upper_landing"],[700,718,"master_bedroom"],[718,732,"daughter_bedroom"],[732,735,"master_ensuite"],[735,750,"laundry_room"],[750,750,"entrance_hall"],[750,795,"kitchen_dining"],[795,795,"upper_landing"],[795,798,"master_bedroom"],[798,812,"laundry_room"],[812,815,"entrance_hall"],[815,815,"upper_landing"],[815,830,"master_bedroom"],[830,833,"laundry_room"],[833,833,"entrance_hall"],[833,848,"ground_bathroom"],[848,851,"kitchen_dining"],[851,866,"living_room"],[866,869,"ground_bathroom"],[869,869,"upper_landing"],[869,884,"laundry_room"],[884,884,"entrance_hall"],[884,887,"living_room"],[887,887,"upper_landing"],[887,901,"master_bedroom"],[901,901,"entrance_hall"],[901,904,"living_room"],[904,904,"upper_landing"],[904,919,"master_bedroom"],[919,919,"entrance_hall"],[919,922,"living_room"],[922,937,"kitchen_dining"],[937,940,"living_room"],[940,955,"kitchen_dining"],[955,955,"upper_landing"],[955,958,"master_bedroom"],[958,958,"entrance_hall"],[958,973,"kitchen_dining"],[973,973,"upper_landing"],[973,976,"daughter_bedroom"],[976,990,"master_bedroom"],[990,993,"laundry_room"],[993,993,"entrance_hall"],[993,1008,"ground_bathroom"],[1008,1008,"upper_landing"],[1008,1011,"laundry_room"],[1011,1026,"master_ensuite"],[1026,1029,"master_bedroom"],[1029,1044,"entrance_hall"],[1044,1047,"ground_bathroom"],[1047,1047,"upper_landing"],[1047,1062,"laundry_room"],[1062,1062,"entrance_hall"],[1062,1065,"living_room"],[1065,1065,"upper_landing"],[1065,1080,"master_bedroom"],[1080,1080,"entrance_hall"],[1080,1125,"kitchen_dining"],[1125,1125,"upper_landing"],[1125,1128,"laundry_room"],[1128,1141,"master_ensuite"],[1141,1144,"master_bedroom"],[1144,1144,"entrance_hall"],[1144,1157,"living_room"],[1157,1157,"upper_landing"],[1157,1160,"master_bedroom"],[1160,1160,"entrance_hall"],[1160,1173,"living_room"],[1173,1176,"kitchen_dining"],[1176,1190,"living_room"],[1190,1193,"kitchen_dining"],[1193,1206,"living_room"],[1206,1209,"kitchen_dining"],[1209,1209,"upper_landing"],[1209,1225,"master_bedroom"],[1225,1238,"daughter_bedroom"],[1238,1238,"entrance_hall"],[1238,1241,"ground_bathroom"],[1241,1241,"upper_landing"],[1241,1258,"master_ensuite"],[1258,1271,"master_bedroom"],[1271,1274,"entrance_hall"],[1274,1274,"upper_landing"],[1274,1287,"master_bedroom"],[1287,1290,"laundry_room"],[1290,1303,"master_ensuite"],[1303,1306,"master_bedroom"],[1306,1306,"entrance_hall"],[1306,1320,"living_room"],[1320,1320,"upper_landing"],[1320,1440,"master_bedroom"]],"Daughter":[[360,495,"daughter_bedroom"],[495,495,"entrance_hall"],[495,540,"kitchen_dining"],[540,540,"upper_landing"],[540,557,"daughter_bedroom"],[557,557,"entrance_hall"],[557,560,"kitchen_dining"],[560,575,"living_room"],[575,592,"kitchen_dining"],[592,610,"living_room"],[610,610,"upper_landing"],[610,613,"master_bedroom"],[613,613,"entrance_hall"],[613,627,"living_room"],[627,627,"upper_landing"],[627,630,"master_bedroom"],[630,630,"entrance_hall"],[630,648,"living_room"],[648,648,"upper_landing"],[648,662,"daughter_bedroom"],[662,662,"entrance_hall"],[662,697,"kitchen_dining"],[697,715,"living_room"],[715,715,"upper_landing"],[715,718,"master_bedroom"],[718,718,"entrance_hall"],[718,732,"kitchen_dining"],[732,732,"upper_landing"],[732,735,"daughter_bedroom"],[735,735,"entrance_hall"],[735,750,"living_room"],[750,795,"kitchen_dining"],[795,795,"upper_landing"],[795,798,"daughter_bedroom"],[798,812,"entrance_hall"],[812,815,"living_room"],[815,848,"kitchen_dining"],[848,851,"living_room"],[851,851,"upper_landing"],[851,866,"daughter_bedroom"],[866,866,"entrance_hall"],[866,869,"living_room"],[869,884,"garage"],[884,887,"living_room"],[887,887,"upper_landing"],[887,904,"daughter_bedroom"],[904,919,"master_bedroom"],[919,919,"entrance_hall"],[919,955,"kitchen_dining"],[955,958,"living_room"],[958,958,"upper_landing"],[958,973,"daughter_bedroom"],[973,973,"entrance_hall"],[973,976,"kitchen_dining"],[976,976,"upper_landing"],[976,990,"daughter_bedroom"],[990,990,"entrance_hall"],[990,993,"living_room"],[993,993,"upper_landing"],[993,1008,"daughter_bedroom"],[1008,1011,"entrance_hall"],[1011,1011,"upper_landing"],[1011,1026,"daughter_bedroom"],[1026,1026,"entrance_hall"],[1026,1029,"kitchen_dining"],[1029,1044,"living_room"],[1044,1062,"kitchen_dining"],[1062,1062,"upper_landing"],[1062,1065,"daughter_bedroom"],[1065,1080,"master_bedroom"],[1080,1080,"entrance_hall"],[1080,1125,"kitchen_dining"],[1125,1128,"garage"],[1128,1141,"kitchen_dining"],[1141,1141,"upper_landing"],[1141,1144,"daughter_bedroom"],[1144,1160,"master_bedroom"],[1160,1173,"daughter_bedroom"],[1173,1173,"entrance_hall"],[1173,1176,"kitchen_dining"],[1176,1190,"living_room"],[1190,1193,"kitchen_dining"],[1193,1206,"living_room"],[1206,1206,"upper_landing"],[1206,1209,"daughter_bedroom"],[1209,1209,"entrance_hall"],[1209,1222,"living_room"],[1222,1222,"upper_landing"],[1222,1225,"daughter_bedroom"],[1225,1225,"entrance_hall"],[1225,1238,"living_room"],[1238,1238,"upper_landing"],[1238,1258,"daughter_bedroom"],[1258,1258,"entrance_hall"],[1258,1274,"living_room"],[1274,1303,"kitchen_dining"],[1303,1303,"upper_landing"],[1303,1306,"master_bedroom"],[1306,1306,"entrance_hall"],[1306,1320,"living_room"],[1320,1320,"upper_landing"],[1320,1440,"daughter_bedroom"]],"dad_phone":[[360,540,"master_bedroom"],[540,543,"carried"],[543,795,"garage"],[795,798,"carried"],[798,1008,"kitchen_dining"],[1008,1011,"carried"],[1011,1255,"living_room"],[1255,1258,"carried"],[1258,1440,"kitchen_dining"]],"dad_briefcase":[[360,557,"master_bedroom"],[557,560,"carried"],[560,812,"entrance_hall"],[812,815,"carried"],[815,1026,"master_bedroom"],[1026,1029,"carried"],[1029,1271,"entrance_hall"],[1271,1274,"carried"],[1274,1440,"master_bedroom"]],"mom_handbag":[[360,557,"master_bedroom"],[557,560,"carried"],[560,812,"entrance_hall"],[812,815,"carried"],[815,1026,"master_bedroom"],[1026,1029,"carried"],[1029,1271,"entrance_hall"],[1271,1274,"carried"],[1274,1440,"master_bedroom"]],"daughter_backpack":[[360,540,"daughter_bedroom"],[540,543,"carried"],[543,795,"daughter_bedroom"],[795,798,"carried"],[798,1008,"entrance_hall"],[1008,1011,"carried"],[1011,1255,"daughter_bedroom"],[1255,1258,"carried"],[1258,1440,"living_room"]]},"dog":{"high":[[360.0,361.5,"entrance_hall"],[361.5,362.5,"ground_bathroom"],[362.5,366.75,"living_room"],[366.75,367.0,"ground_bathroom"],[367.0,369.25,"entrance_hall"],[369.25,370.25,"utility_room"],[370.25,374.0,"kitchen_dining"],[374.0,376.0,"garage"],[376.0,377.75,"ground_bathroom"],[377.75,379.5,"garage"],[379.5,381.0,"utility_room"],[381.0,382.0,"entrance_hall"],[382.0,383.25,"upper_landing"],[383.25,383.5,"laundry_room"],[383.5,385.5,"master_ensuite"],[385.5,385.75,"daughter_bedroom"],[385.75,387.5,"master_bedroom"],[387.5,388.0,"daughter_bedroom"],[388.0,390.0,"master_ensuite"],[390.0,390.5,"laundry_room"],[390.5,392.25,"upper_landing"],[392.25,394.25,"hall_bathroom"],[394.25,396.25,"upper_landing"],[396.25,398.0,"master_ensuite"],[398.0,399.75,"daughter_bedroom"],[399.75,401.25,"master_ensuite"],[401.25,402.5,"laundry_room"],[402.5,404.0,"guest_bedroom"],[404.0,405.75,"spare_bedroom"],[405.75,407.25,"guest_bedroom"],[407.25,408.75,"laundry_room"],[408.75,409.75,"upper_landing"],[409.75,410.25,"entrance_hall"],[480.0,481.5,"entrance_hall"],[481.5,482.5,"ground_bathroom"],[482.5,486.75,"living_room"],[486.75,487.0,"ground_bathroom"],[487.0,489.25,"entrance_hall"],[489.25,490.25,"utility_room"],[490.25,494.0,"kitchen_dining"],[494.0,496.0,"garage"],[496.0,497.75,"ground_bathroom"],[497.75,499.5,"garage"],[499.5,501.0,"utility_room"],[501.0,502.0,"entrance_hall"],[502.0,503.25,"upper_landing"],[503.25,503.5,"laundry_room"],[503.5,505.5,"master_ensuite"],[505.5,505.75,"daughter_bedroom"],[505.75,507.5,"master_bedroom"],[507.5,508.0,"daughter_bedroom"],[508.0,510.0,"master_ensuite"],[510.0,510.5,"laundry_room"],[510.5,512.25,"upper_landing"],[512.25,514.25,"hall_bathroom"],[514.25,516.25,"upper_landing"],[516.25,518.0,"master_ensuite"],[518.0,519.75,"daughter_bedroom"],[519.75,521.25,"master_ensuite"],[521.25,522.5,"laundry_room"],[522.5,524.0,"guest_bedroom"],[524.0,525.75,"spare_bedroom"],[525.75,527.25,"guest_bedroom"],[527.25,528.75,"laundry_room"],[528.75,529.75,"upper_landing"],[529.75,530.25,"entrance_hall"],[600.0,601.5,"entrance_hall"],[601.5,602.5,"ground_bathroom"],[602.5,606.75,"living_room"],[606.75,607.0,"ground_bathroom"],[607.0,609.25,"entrance_hall"],[609.25,610.25,"utility_room"],[610.25,614.0,"kitchen_dining"],[614.0,616.0,"garage"],[616.0,617.75,"ground_bathroom"],[617.75,619.5,"garage"],[619.5,621.0,"utility_room"],[621.0,622.0,"entrance_hall"],[622.0,623.25,"upper_landing"],[623.25,623.5,"laundry_room"],[623.5,625.5,"master_ensuite"],[625.5,625.75,"daughter_bedroom"],[625.75,627.5,"master_bedroom"],[627.5,628.0,"daughter_bedroom"],[628.0,630.0,"master_ensuite"],[630.0,630.5,"laundry_room"],[630.5,632.25,"upper_landing"],[632.25,634.25,"hall_bathroom"],[634.25,636.25,"upper_landing"],[636.25,638.0,"master_ensuite"],[638.0,639.75,"daughter_bedroom"],[639.75,641.25,"master_ensuite"],[641.25,642.5,"laundry_room"],[642.5,644.0,"guest_bedroom"],[644.0,645.75,"spare_bedroom"],[645.75,647.25,"guest_bedroom"],[647.25,648.75,"laundry_room"],[648.75,649.75,"upper_landing"],[649.75,650.25,"entrance_hall"],[720.0,721.5,"entrance_hall"],[721.5,722.5,"ground_bathroom"],[722.5,726.75,"living_room"],[726.75,727.0,"ground_bathroom"],[727.0,729.25,"entrance_hall"],[729.25,730.25,"utility_room"],[730.25,734.0,"kitchen_dining"],[734.0,736.0,"garage"],[736.0,737.75,"ground_bathroom"],[737.75,739.5,"garage"],[739.5,741.0,"utility_room"],[741.0,742.0,"entrance_hall"],[742.0,743.25,"upper_landing"],[743.25,743.5,"laundry_room"],[743.5,745.5,"master_ensuite"],[745.5,745.75,"daughter_bedroom"],[745.75,747.5,"master_bedroom"],[747.5,748.0,"daughter_bedroom"],[748.0,750.0,"master_ensuite"],[750.0,750.5,"laundry_room"],[750.5,752.25,"upper_landing"],[752.25,754.25,"hall_bathroom"],[754.25,756.25,"upper_landing"],[756.25,758.0,"master_ensuite"],[758.0,759.75,"daughter_bedroom"],[759.75,761.25,"master_ensuite"],[761.25,762.5,"laundry_room"],[762.5,764.0,"guest_bedroom"],[764.0,765.75,"spare_bedroom"],[765.75,767.25,"guest_bedroom"],[767.25,768.75,"laundry_room"],[768.75,769.75,"upper_landing"],[769.75,770.25,"entrance_hall"],[840.0,841.5,"entrance_hall"],[841.5,842.5,"ground_bathroom"],[842.5,846.75,"living_room"],[846.75,847.0,"ground_bathroom"],[847.0,849.25,"entrance_hall"],[849.25,850.25,"utility_room"],[850.25,854.0,"kitchen_dining"],[854.0,856.0,"garage"],[856.0,857.75,"ground_bathroom"],[857.75,859.5,"garage"],[859.5,861.0,"utility_room"],[861.0,862.0,"entrance_hall"],[862.0,863.25,"upper_landing"],[863.25,863.5,"laundry_room"],[863.5,865.5,"master_ensuite"],[865.5,865.75,"daughter_bedroom"],[865.75,867.5,"master_bedroom"],[867.5,868.0,"daughter_bedroom"],[868.0,870.0,"master_ensuite"],[870.0,870.5,"laundry_room"],[870.5,872.25,"upper_landing"],[872.25,874.25,"hall_bathroom"],[874.25,876.25,"upper_landing"],[876.25,878.0,"master_ensuite"],[878.0,879.75,"daughter_bedroom"],[879.75,881.25,"master_ensuite"],[881.25,882.5,"laundry_room"],[882.5,884.0,"guest_bedroom"],[884.0,885.75,"spare_bedroom"],[885.75,887.25,"guest_bedroom"],[887.25,888.75,"laundry_room"],[888.75,889.75,"upper_landing"],[889.75,890.25,"entrance_hall"],[960.0,961.5,"entrance_hall"],[961.5,962.5,"ground_bathroom"],[962.5,966.75,"living_room"],[966.75,967.0,"ground_bathroom"],[967.0,969.25,"entrance_hall"],[969.25,970.25,"utility_room"],[970.25,974.0,"kitchen_dining"],[974.0,976.0,"garage"],[976.0,977.75,"ground_bathroom"],[977.75,979.5,"garage"],[979.5,981.0,"utility_room"],[981.0,982.0,"entrance_hall"],[982.0,983.25,"upper_landing"],[983.25,983.5,"laundry_room"],[983.5,985.5,"master_ensuite"],[985.5,985.75,"daughter_bedroom"],[985.75,987.5,"master_bedroom"],[987.5,988.0,"daughter_bedroom"],[988.0,990.0,"master_ensuite"],[990.0,990.5,"laundry_room"],[990.5,992.25,"upper_landing"],[992.25,994.25,"hall_bathroom"],[994.25,996.25,"upper_landing"],[996.25,998.0,"master_ensuite"],[998.0,999.75,"daughter_bedroom"],[999.75,1001.25,"master_ensuite"],[1001.25,1002.5,"laundry_room"],[1002.5,1004.0,"guest_bedroom"],[1004.0,1005.75,"spare_bedroom"],[1005.75,1007.25,"guest_bedroom"],[1007.25,1008.75,"laundry_room"],[1008.75,1009.75,"upper_landing"],[1009.75,1010.25,"entrance_hall"],[1080.0,1081.5,"entrance_hall"],[1081.5,1082.5,"ground_bathroom"],[1082.5,1086.75,"living_room"],[1086.75,1087.0,"ground_bathroom"],[1087.0,1089.25,"entrance_hall"],[1089.25,1090.25,"utility_room"],[1090.25,1094.0,"kitchen_dining"],[1094.0,1096.0,"garage"],[1096.0,1097.75,"ground_bathroom"],[1097.75,1099.5,"garage"],[1099.5,1101.0,"utility_room"],[1101.0,1102.0,"entrance_hall"],[1102.0,1103.25,"upper_landing"],[1103.25,1103.5,"laundry_room"],[1103.5,1105.5,"master_ensuite"],[1105.5,1105.75,"daughter_bedroom"],[1105.75,1107.5,"master_bedroom"],[1107.5,1108.0,"daughter_bedroom"],[1108.0,1110.0,"master_ensuite"],[1110.0,1110.5,"laundry_room"],[1110.5,1112.25,"upper_landing"],[1112.25,1114.25,"hall_bathroom"],[1114.25,1116.25,"upper_landing"],[1116.25,1118.0,"master_ensuite"],[1118.0,1119.75,"daughter_bedroom"],[1119.75,1121.25,"master_ensuite"],[1121.25,1122.5,"laundry_room"],[1122.5,1124.0,"guest_bedroom"],[1124.0,1125.75,"spare_bedroom"],[1125.75,1127.25,"guest_bedroom"],[1127.25,1128.75,"laundry_room"],[1128.75,1129.75,"upper_landing"],[1129.75,1130.25,"entrance_hall"],[1200.0,1201.5,"entrance_hall"],[1201.5,1202.5,"ground_bathroom"],[1202.5,1206.75,"living_room"],[1206.75,1207.0,"ground_bathroom"],[1207.0,1209.25,"entrance_hall"],[1209.25,1210.25,"utility_room"],[1210.25,1214.0,"kitchen_dining"],[1214.0,1216.0,"garage"],[1216.0,1217.75,"ground_bathroom"],[1217.75,1219.5,"garage"],[1219.5,1221.0,"utility_room"],[1221.0,1222.0,"entrance_hall"],[1222.0,1223.25,"upper_landing"],[1223.25,1223.5,"laundry_room"],[1223.5,1225.5,"master_ensuite"],[1225.5,1225.75,"daughter_bedroom"],[1225.75,1227.5,"master_bedroom"],[1227.5,1228.0,"daughter_bedroom"],[1228.0,1230.0,"master_ensuite"],[1230.0,1230.5,"laundry_room"],[1230.5,1232.25,"upper_landing"],[1232.25,1234.25,"hall_bathroom"],[1234.25,1236.25,"upper_landing"],[1236.25,1238.0,"master_ensuite"],[1238.0,1239.75,"daughter_bedroom"],[1239.75,1241.25,"master_ensuite"],[1241.25,1242.5,"laundry_room"],[1242.5,1244.0,"guest_bedroom"],[1244.0,1245.75,"spare_bedroom"],[1245.75,1247.25,"guest_bedroom"],[1247.25,1248.75,"laundry_room"],[1248.75,1249.75,"upper_landing"],[1249.75,1250.25,"entrance_hall"],[1320.0,1321.5,"entrance_hall"],[1321.5,1322.5,"ground_bathroom"],[1322.5,1326.75,"living_room"],[1326.75,1327.0,"ground_bathroom"],[1327.0,1329.25,"entrance_hall"],[1329.25,1330.25,"utility_room"],[1330.25,1334.0,"kitchen_dining"],[1334.0,1336.0,"garage"],[1336.0,1337.75,"ground_bathroom"],[1337.75,1339.5,"garage"],[1339.5,1341.0,"utility_room"],[1341.0,1342.0,"entrance_hall"],[1342.0,1343.25,"upper_landing"],[1343.25,1343.5,"laundry_room"],[1343.5,1345.5,"master_ensuite"],[1345.5,1345.75,"daughter_bedroom"],[1345.75,1347.5,"master_bedroom"],[1347.5,1348.0,"daughter_bedroom"],[1348.0,1350.0,"master_ensuite"],[1350.0,1350.5,"laundry_room"],[1350.5,1352.25,"upper_landing"],[1352.25,1354.25,"hall_bathroom"],[1354.25,1356.25,"upper_landing"],[1356.25,1358.0,"master_ensuite"],[1358.0,1359.75,"daughter_bedroom"],[1359.75,1361.25,"master_ensuite"],[1361.25,1362.5,"laundry_room"],[1362.5,1364.0,"guest_bedroom"],[1364.0,1365.75,"spare_bedroom"],[1365.75,1367.25,"guest_bedroom"],[1367.25,1368.75,"laundry_room"],[1368.75,1369.75,"upper_landing"],[1369.75,1370.25,"entrance_hall"]],"medium":[[360.0,361.5,"entrance_hall"],[361.5,362.5,"ground_bathroom"],[362.5,364.25,"living_room"],[364.25,365.75,"ground_bathroom"],[365.75,366.5,"entrance_hall"],[366.5,368.0,"garage"],[368.0,369.25,"utility_room"],[369.25,374.5,"kitchen_dining"],[374.5,375.25,"utility_room"],[375.25,375.75,"garage"],[375.75,377.5,"entrance_hall"],[377.5,379.0,"upper_landing"],[379.0,379.5,"laundry_room"],[379.5,381.75,"master_ensuite"],[381.75,382.25,"daughter_bedroom"],[382.25,384.75,"master_bedroom"],[384.75,385.0,"daughter_bedroom"],[385.0,387.5,"master_ensuite"],[387.5,388.0,"laundry_room"],[388.0,389.5,"upper_landing"],[389.5,390.25,"entrance_hall"],[540.0,541.25,"entrance_hall"],[541.25,542.25,"ground_bathroom"],[542.25,544.0,"living_room"],[544.0,545.25,"ground_bathroom"],[545.25,545.75,"entrance_hall"],[545.75,547.25,"garage"],[547.25,548.25,"utility_room"],[548.25,553.0,"kitchen_dining"],[553.0,553.75,"utility_room"],[553.75,554.0,"garage"],[554.0,555.5,"entrance_hall"],[555.5,557.25,"upper_landing"],[557.25,559.25,"master_ensuite"],[559.25,561.5,"daughter_bedroom"],[561.5,563.25,"master_ensuite"],[563.25,565.75,"upper_landing"],[565.75,568.0,"hall_bathroom"],[568.0,569.5,"upper_landing"],[569.5,570.25,"entrance_hall"],[720.0,721.5,"entrance_hall"],[721.5,722.5,"ground_bathroom"],[722.5,724.25,"living_room"],[724.25,725.75,"ground_bathroom"],[725.75,726.5,"entrance_hall"],[726.5,728.0,"garage"],[728.0,729.25,"utility_room"],[729.25,734.5,"kitchen_dining"],[734.5,735.25,"utility_room"],[735.25,735.75,"garage"],[735.75,737.5,"entrance_hall"],[737.5,739.0,"upper_landing"],[739.0,739.5,"laundry_room"],[739.5,741.75,"master_ensuite"],[741.75,742.25,"daughter_bedroom"],[742.25,744.75,"master_bedroom"],[744.75,745.0,"daughter_bedroom"],[745.0,747.5,"master_ensuite"],[747.5,748.0,"laundry_room"],[748.0,749.5,"upper_landing"],[749.5,750.25,"entrance_hall"],[900.0,901.25,"entrance_hall"],[901.25,902.25,"ground_bathroom"],[902.25,904.0,"living_room"],[904.0,905.25,"ground_bathroom"],[905.25,905.75,"entrance_hall"],[905.75,907.25,"garage"],[907.25,908.25,"utility_room"],[908.25,913.0,"kitchen_dining"],[913.0,913.75,"utility_room"],[913.75,914.0,"garage"],[914.0,915.5,"entrance_hall"],[915.5,917.25,"upper_landing"],[917.25,919.25,"master_ensuite"],[919.25,921.5,"daughter_bedroom"],[921.5,923.25,"master_ensuite"],[923.25,925.75,"upper_landing"],[925.75,928.0,"hall_bathroom"],[928.0,929.5,"upper_landing"],[929.5,930.25,"entrance_hall"],[1080.0,1081.5,"entrance_hall"],[1081.5,1082.5,"ground_bathroom"],[1082.5,1084.25,"living_room"],[1084.25,1085.75,"ground_bathroom"],[1085.75,1086.5,"entrance_hall"],[1086.5,1088.0,"garage"],[1088.0,1089.25,"utility_room"],[1089.25,1094.5,"kitchen_dining"],[1094.5,1095.25,"utility_room"],[1095.25,1095.75,"garage"],[1095.75,1097.5,"entrance_hall"],[1097.5,1099.0,"upper_landing"],[1099.0,1099.5,"laundry_room"],[1099.5,1101.75,"master_ensuite"],[1101.75,1102.25,"daughter_bedroom"],[1102.25,1104.75,"master_bedroom"],[1104.75,1105.0,"daughter_bedroom"],[1105.0,1107.5,"master_ensuite"],[1107.5,1108.0,"laundry_room"],[1108.0,1109.5,"upper_landing"],[1109.5,1110.25,"entrance_hall"],[1260.0,1261.25,"entrance_hall"],[1261.25,1262.25,"ground_bathroom"],[1262.25,1264.0,"living_room"],[1264.0,1265.25,"ground_bathroom"],[1265.25,1265.75,"entrance_hall"],[1265.75,1267.25,"garage"],[1267.25,1268.25,"utility_room"],[1268.25,1273.0,"kitchen_dining"],[1273.0,1273.75,"utility_room"],[1273.75,1274.0,"garage"],[1274.0,1275.5,"entrance_hall"],[1275.5,1277.25,"upper_landing"],[1277.25,1279.25,"master_ensuite"],[1279.25,1281.5,"daughter_bedroom"],[1281.5,1283.25,"master_ensuite"],[1283.25,1285.75,"upper_landing"],[1285.75,1288.0,"hall_bathroom"],[1288.0,1289.5,"upper_landing"],[1289.5,1290.25,"entrance_hall"]],"low":[[360.0,361.5,"entrance_hall"],[361.5,362.5,"ground_bathroom"],[362.5,364.5,"living_room"],[364.5,366.0,"ground_bathroom"],[366.0,366.75,"entrance_hall"],[366.75,368.5,"garage"],[368.5,369.75,"utility_room"],[369.75,375.25,"kitchen_dining"],[375.25,376.0,"utility_room"],[376.0,376.5,"garage"],[376.5,378.25,"entrance_hall"],[600.0,601.5,"entrance_hall"],[601.5,602.5,"ground_bathroom"],[602.5,604.5,"living_room"],[604.5,606.0,"ground_bathroom"],[606.0,606.75,"entrance_hall"],[606.75,608.5,"garage"],[608.5,609.75,"utility_room"],[609.75,615.25,"kitchen_dining"],[615.25,616.0,"utility_room"],[616.0,616.5,"garage"],[616.5,618.25,"entrance_hall"],[840.0,841.5,"entrance_hall"],[841.5,842.5,"ground_bathroom"],[842.5,844.5,"living_room"],[844.5,846.0,"ground_bathroom"],[846.0,846.75,"entrance_hall"],[846.75,848.5,"garage"],[848.5,849.75,"utility_room"],[849.75,855.25,"kitchen_dining"],[855.25,856.0,"utility_room"],[856.0,856.5,"garage"],[856.5,858.25,"entrance_hall"],[1080.0,1081.5,"entrance_hall"],[1081.5,1082.5,"ground_bathroom"],[1082.5,1084.5,"living_room"],[1084.5,1086.0,"ground_bathroom"],[1086.0,1086.75,"entrance_hall"],[1086.75,1088.5,"garage"],[1088.5,1089.75,"utility_room"],[1089.75,1095.25,"kitchen_dining"],[1095.25,1096.0,"utility_room"],[1096.0,1096.5,"garage"],[1096.5,1098.25,"entrance_hall"],[1320.0,1321.5,"entrance_hall"],[1321.5,1322.5,"ground_bathroom"],[1322.5,1324.5,"living_room"],[1324.5,1326.0,"ground_bathroom"],[1326.0,1326.75,"entrance_hall"],[1326.75,1328.5,"garage"],[1328.5,1329.75,"utility_room"],[1329.75,1335.25,"kitchen_dining"],[1335.25,1336.0,"utility_room"],[1336.0,1336.5,"garage"],[1336.5,1338.25,"entrance_hall"]]}};</script>
+<script>
+const $ = s => document.querySelector(s);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtMin = m => { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 60; return String(h).padStart(2, "0") + ":" + String(mm).padStart(2, "0"); };
+
+/* ---------- hero mission console ---------- */
+(function () {
+  const v = $("#hero-v"), track = $("#track"), tel = $("#telemetry");
+  const SIMS = {
+    ue: { src: "a/hero_ue.mp4", poster: "a/hero_ue.jpg", dur: 40,
+      phases: [["drone search", 0, 16, "--drone"], ["handoff", 16, 20, "--dog"], ["dog approach", 20, 36.5, "--approach"], ["confirm", 36.5, 40, "--confirm"]],
+      tel: [["map", "Modular Neighborhood"], ["drone", "35 m lawnmower sweep, nadir cam fov 50"], ["dog cam", "0.7 m, fov 90"], ["targets", "5 casualty stand-ins + pedestrians"]] },
+    isaac: { src: "a/hero_isaac.mp4", poster: "a/hero_isaac.jpg", dur: 40,
+      phases: [["drone search", 0, 17, "--drone"], ["handoff", 17, 19, "--dog"], ["dog approach", 19, 37.75, "--approach"], ["confirm", 37.75, 40, "--confirm"]],
+      tel: [["map", "Rivermark"], ["Go2", "Isaac Lab RL policy, 18.4 m at 0.90 m/s"], ["path deviation", "max 7.6 cm"], ["drone", "107 m route, 0.26 m mean tracking error"], ["physics", "8,000 steps"]] }
+  };
+  let cur = "ue";
+  function build() {
+    const s = SIMS[cur];
+    track.innerHTML = "";
+    s.phases.forEach(([name, a, b, col]) => {
+      const d = document.createElement("div");
+      d.style.flex = (b - a) + " 0 0"; d.style.background = css(col); d.textContent = name; d.dataset.a = a; d.dataset.b = b;
+      track.appendChild(d);
+    });
+    const h = document.createElement("div"); h.className = "head"; track.appendChild(h);
+    tel.innerHTML = s.tel.map(([k, val]) => `<span>${k} <b>${val}</b></span>`).join("") + `<span>t <b id="tt">0.0 s</b></span>`;
+  }
+  function tick() {
+    const s = SIMS[cur], t = v.currentTime || 0, head = track.querySelector(".head");
+    if (head) head.style.left = Math.min(100, t / s.dur * 100) + "%";
+    track.querySelectorAll("div[data-a]").forEach(d => d.classList.toggle("cur", t >= +d.dataset.a && t < +d.dataset.b));
+    const tt = $("#tt"); if (tt) tt.textContent = t.toFixed(1) + " s";
+    track.setAttribute("aria-valuenow", t.toFixed(0));
+  }
+  function setSim(k) {
+    cur = k; const s = SIMS[k];
+    $("#sim-ue").setAttribute("aria-pressed", k === "ue"); $("#sim-isaac").setAttribute("aria-pressed", k === "isaac");
+    v.poster = s.poster; v.src = s.src; build(); tick();
+    if (!reduce) v.play().catch(() => {});
+  }
+  $("#sim-ue").onclick = () => setSim("ue");
+  $("#sim-isaac").onclick = () => setSim("isaac");
+  const seek = e => { const r = track.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * SIMS[cur].dur; tick(); };
+  track.addEventListener("pointerdown", seek);
+  track.addEventListener("keydown", e => { const d = SIMS[cur].dur; if (e.key === "ArrowRight") v.currentTime = Math.min(d, v.currentTime + 2); if (e.key === "ArrowLeft") v.currentTime = Math.max(0, v.currentTime - 2); if (e.key === " ") { e.preventDefault(); v.paused ? v.play() : v.pause(); } tick(); });
+  v.addEventListener("timeupdate", tick);
+  if (reduce) { v.removeAttribute("autoplay"); v.pause(); v.controls = true; }
+  build(); tick();
+  (function raf() { if (!v.paused) tick(); requestAnimationFrame(raf); })();
+})();
+
+/* ---------- sensor wipe ---------- */
+(function () {
+  const OUT = [
+    ["air", "Drone, 30 m nadir", "16/9", "Drone at 30 m looking straight down. Five casualty stand-ins, a parked car and pedestrians; each gets its own mask color, so pixel counts per target are exact."],
+    ["gnd", "Go2, 8 m from target", "16/9", "The dog's front camera at 0.7 m, 8 m from a casualty stand-in. Depth is metric, which is what the approach controller uses to stop."]
+  ];
+  const IN = [
+    ["hh1", "Master bedroom", "4/3", "All three household members upstairs. The mask separates each person from furniture, which is how visibility is derived for memory."],
+    ["hh2", "Dining room", "4/3", "Ground floor, one person behind another. Partial occlusion is common and is kept, not cleaned up."],
+    ["hh3", "Hallway, carrying", "4/3", "Dad carrying a briefcase. Moved objects are the hard case for memory: the last place it was seen stops being true."],
+    ["hh4", "Kitchen", "4/3", "Mom in the kitchen. Small objects on counters show up in the mask even when RGB makes them hard to pick out."],
+    ["hh5", "Staircase", "4/3", "Three people on the stairs at different heights. Floor changes are where room-level memory most often breaks."]
+  ];
+  let scene = "air", mode = "seg", pos = 50;
+  const wipe = $("#wipe"), over = $("#w-over"), handle = $("#w-handle"), range = $("#w-range");
+  const all = [...OUT, ...IN];
+  function mk(list, el) {
+    list.forEach(([id, name]) => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.id = id;
+      b.innerHTML = `<span>${name}</span><small>${id.startsWith("hh") ? "4:3" : "16:9"}</small>`;
+      b.onclick = () => { scene = id; render(); }; el.appendChild(b);
+    });
+  }
+  mk(OUT, $("#scenes-out")); mk(IN, $("#scenes-in"));
+  function setPos(p) { pos = Math.max(0, Math.min(100, p)); over.style.clipPath = `inset(0 0 0 ${pos}%)`; handle.style.left = pos + "%"; range.value = pos; }
+  function render() {
+    const s = all.find(x => x[0] === scene);
+    $("#w-base").src = `a/${scene}_rgb.jpg`; over.src = `a/${scene}_${mode}.jpg`;
+    wipe.style.aspectRatio = s[2]; $("#w-note").textContent = s[3];
+    $("#w-tag").textContent = mode === "seg" ? "SEGMENTATION" : "DEPTH";
+    document.querySelectorAll(".scenes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === scene));
+    document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+  }
+  document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { mode = b.dataset.mode; render(); });
+  let drag = false;
+  const at = e => { const r = wipe.getBoundingClientRect(); setPos((e.clientX - r.left) / r.width * 100); };
+  wipe.addEventListener("pointerdown", e => { drag = true; wipe.setPointerCapture(e.pointerId); at(e); });
+  wipe.addEventListener("pointermove", e => { if (drag || e.pointerType === "mouse") at(e); });
+  wipe.addEventListener("pointerup", () => drag = false);
+  range.addEventListener("input", () => setPos(+range.value));
+  // preload only the other modality of the current scene
+  const warm = () => ["seg", "depth"].forEach(m => { new Image().src = `a/${scene}_${m}.jpg`; });
+  document.querySelectorAll(".scenes button").forEach(b => b.addEventListener("click", warm));
+  warm();
+  render(); setPos(50);
+})();
+
+/* ---------- closed loop tasks ---------- */
+(function () {
+  const T = [
+    ["t1", "Ground navigation", "Walk the dog to the casualty from a street start.", "Go2 · front camera", "DeepSeek-V4.1-Flash vs InternVL3-8B", '{"target_visible": true, "target_position": "center", "action": "forward"}'],
+    ["t2", "Drone inspection", "Close in on a reported person until they are centered below the drone.", "Drone · down camera", "DeepSeek-V4.1-Flash vs Qwen3-VL-8B", '{"reports": [], "action": "south"}'],
+    ["t3", "Emergency search", "Search a block for an injured person with no prior location.", "Go2 · front camera", "DeepSeek-V4.1-Flash vs Qwen3-VL-8B", '{"injured_person_visible": false, "action": "turn_right"}'],
+    ["t4", "Air–ground handoff", "The drone reports a grid cell; the dog goes there and confirms.", "Drone + Go2", "DeepSeek-V4.1-Flash vs Qwen3-VL-8B", '{"person_visible": true, "cell": "A3", "action": "handoff"}']
+  ];
+  const box = $("#tasks"), v = $("#cl-v");
+  T.forEach(([id, name, desc, robot, models, act], i) => {
+    const b = document.createElement("button"); b.type = "button"; b.dataset.id = id;
+    b.innerHTML = `<small>task ${i + 1} of 4</small><b>${name}</b><span>${desc}</span>`;
+    b.onclick = () => set(id, true); box.appendChild(b);
+  });
+  function set(id, play) {
+    const t = T.find(x => x[0] === id);
+    box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === id));
+    v.poster = `a/cl_${id}.jpg`; v.src = `a/cl_${id}.mp4`;
+    $("#io-robot").textContent = t[3]; $("#io-models").textContent = t[4]; $("#io-action").textContent = t[5];
+    if (play && !reduce) v.play().catch(() => {});
+  }
+  set("t4", false);
+  if (reduce) v.controls = true;
+  else new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { threshold: .3 }).observe(v);
+})();
+
+/* ---------- environments ---------- */
+(function () {
+  const E = [
+    ["simworld_suburb", "Suburb", "SimWorld"], ["simworld_modular_neighborhood", "Modular Neighborhood", "SimWorld"],
+    ["simworld_downtown_west", "Downtown West", "SimWorld"], ["unrealzoo_abandoned_district", "Abandoned District", "UnrealZoo"],
+    ["unrealzoo_postsoviet_village", "Post-Soviet Village", "UnrealZoo"], ["unrealzoo_rural_australia", "Rural Australia", "UnrealZoo"],
+    ["rivermark", "Rivermark", "Isaac Sim"], ["citytower", "City Tower", "Isaac Sim"]
+  ];
+  const g = $("#envs");
+  E.forEach(([id, name, eng]) => {
+    const f = document.createElement("figure"); f.className = "env"; f.style.margin = 0; f.tabIndex = 0;
+    f.setAttribute("aria-label", `${name}, ${eng}. Plays a flythrough.`);
+    f.innerHTML = `<img src="a/env_${id}.jpg" alt="" loading="lazy"><video muted loop playsinline preload="none" src="a/env_${id}.mp4"></video><figcaption><span>${name}</span><small>${eng}</small></figcaption>`;
+    const v = f.querySelector("video");
+    const on = () => { if (reduce) return; v.play().then(() => f.classList.add("playing")).catch(() => {}); };
+    const off = () => { v.pause(); f.classList.remove("playing"); };
+    f.addEventListener("mouseenter", on); f.addEventListener("mouseleave", off);
+    f.addEventListener("focus", on); f.addEventListener("blur", off);
+    f.addEventListener("click", () => f.classList.contains("playing") ? off() : on());
+    g.appendChild(f);
+  });
+})();
+
+/* ---------- household day chart ---------- */
+(function () {
+  const D = HOUSEHOLD;
+  const ZONES = {
+    living: ["Living & entry", "#5AA9FF", ["living_room", "entrance_hall"]],
+    kitchen: ["Kitchen & dining", "#F08A4B", ["kitchen_dining"]],
+    master: ["Master suite", "#B48CF2", ["master_bedroom", "master_ensuite"]],
+    kid: ["Daughter / guest rooms", "#4FD18B", ["daughter_bedroom", "guest_bedroom", "spare_bedroom"]],
+    landing: ["Upstairs landing", "#7C8A97", ["upper_landing"]],
+    utility: ["Bath, laundry, utility", "#3FC1C9", ["ground_bathroom", "hall_bathroom", "laundry_room", "utility_room"]],
+    garage: ["Garage", "#E26D8F", ["garage"]]
+  };
+  const zoneOf = r => { for (const k in ZONES) if (ZONES[k][2].includes(r)) return k; return null; };
+  const pretty = r => r === "carried" ? "being carried" : r === "away" ? "away from home" : r.replace(/_/g, " ");
+  const LANES = [["Dad", "Dad"], ["Mom", "Mom"], ["Daughter", "Daughter"], ["dad_phone", "Dad's phone"], ["dad_briefcase", "Dad's briefcase"], ["mom_handbag", "Mom's handbag"], ["daughter_backpack", "Daughter's backpack"]];
+  const svg = $("#day"), NS = "http://www.w3.org/2000/svg";
+  const W = 1100, L = 150, R = 16, T0 = 360, T1 = 1440, lh = 22, gap = 8, top = 26;
+  const x = m => L + (m - T0) / (T1 - T0) * (W - L - R);
+  const dogY = top + LANES.length * (lh + gap) + 14, H = dogY + lh + 34;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const el = (t, a, txt, parent = svg) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; parent.appendChild(e); return e; };
+  let budget = "medium", tcur = 15 * 60 + 20;
+  const muted = css("--muted"), faint = css("--faint"), rule = css("--rule"), ink = css("--ink"), panel2 = css("--panel-2");
+  function laneRoom(segs, t) { for (const [a, b, r] of segs) if (t >= a && t < b) return r; return null; }
+  function lastDogIn(room, t) {
+    let best = null;
+    for (const [a, b, r] of D.dog[budget]) { if (a > t) break; if (r === room) best = Math.min(b, t); }
+    return best;
+  }
+  function draw() {
+    svg.innerHTML = "";
+    for (let h = 6; h <= 24; h += 2) {
+      el("line", { x1: x(h * 60), x2: x(h * 60), y1: top - 6, y2: H - 22, stroke: rule, "stroke-width": 1 });
+      el("text", { x: x(h * 60), y: H - 6, "text-anchor": "middle", fill: faint, "font-size": 11 }, String(h).padStart(2, "0") + ":00");
+    }
+    el("text", { x: 0, y: 14, fill: faint, "font-size": 10.5, "letter-spacing": "1" }, "PEOPLE & OBJECTS");
+    LANES.forEach(([id, name], i) => {
+      const y = top + i * (lh + gap) + (i >= 3 ? 10 : 0);
+      el("text", { x: 0, y: y + 15, fill: i < 3 ? ink : muted, "font-size": 12 }, name);
+      el("rect", { x: L, y, width: W - L - R, height: lh, fill: panel2 });
+      D.lanes[id].forEach(([a, b, r]) => {
+        const z = zoneOf(r); const w = Math.max(0.6, x(b) - x(a));
+        if (r === "carried") el("rect", { x: x(a), y: y + lh / 2 - 1.5, width: Math.max(2, w), height: 3, fill: ink });
+        else if (z) el("rect", { x: x(a), y, width: w, height: lh, fill: ZONES[z][1], opacity: .85 });
+      });
+    });
+    el("text", { x: 0, y: dogY - 4, fill: faint, "font-size": 10.5, "letter-spacing": "1" }, "ROBOT DOG");
+    el("text", { x: 0, y: dogY + 15, fill: css("--dog"), "font-size": 12 }, `patrol · ${budget}`);
+    el("rect", { x: L, y: dogY, width: W - L - R, height: lh, fill: panel2 });
+    D.dog[budget].forEach(([a, b, r]) => { const z = zoneOf(r); el("rect", { x: x(a), y: dogY, width: Math.max(0.8, x(b) - x(a)), height: lh, fill: z ? ZONES[z][1] : faint }); });
+    // cursor
+    const cx = x(tcur);
+    el("line", { x1: cx, x2: cx, y1: top - 10, y2: dogY + lh + 4, stroke: css("--dog"), "stroke-width": 1.5 });
+    const lab = el("text", { x: cx + (cx > W - 90 ? -6 : 6), y: top - 12, fill: css("--dog"), "font-size": 11.5, "text-anchor": cx > W - 90 ? "end" : "start" }, fmtMin(tcur));
+    // overlay for pointer
+    const hit = el("rect", { x: L, y: 0, width: W - L - R, height: H, fill: "transparent", style: "cursor:crosshair" });
+    hit.addEventListener("pointermove", mv); hit.addEventListener("pointerdown", mv);
+    readout();
+  }
+  function mv(e) {
+    const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    const q = p.matrixTransform(svg.getScreenCTM().inverse());
+    tcur = Math.max(T0, Math.min(T1 - 1, T0 + (q.x - L) / (W - L - R) * (T1 - T0))); draw();
+  }
+  function readout() {
+    const box = $("#readout"); box.innerHTML = "";
+    LANES.forEach(([id, name]) => {
+      const r = laneRoom(D.lanes[id], tcur) || "away";
+      let s = "", cls = "none";
+      if (r === "carried" || r === "away") { s = "no fixed room"; }
+      else {
+        const last = lastDogIn(r, tcur);
+        if (last == null) s = "dog not in that room yet today";
+        else { const ago = tcur - last; cls = ago < 60 ? "fresh" : ago < 180 ? "aging" : "stale"; s = ago < 1 ? "dog is in that room now" : `dog last there ${ago >= 60 ? Math.floor(ago / 60) + " h " : ""}${Math.round(ago % 60)} min ago`; }
+      }
+      const d = document.createElement("div");
+      d.innerHTML = `<div class="n">${name}</div><div class="r">${pretty(r)}</div><div class="s ${cls}">${s}</div>`;
+      box.appendChild(d);
+    });
+  }
+  const lg = $("#legend");
+  lg.innerHTML = Object.values(ZONES).map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("") + `<span><i style="background:${ink};height:3px;vertical-align:3px"></i>carried</span><span>· drag across the chart to move the clock</span>`;
+  document.querySelectorAll("#budget button").forEach(b => b.onclick = () => {
+    budget = b.dataset.b; document.querySelectorAll("#budget button").forEach(o => o.setAttribute("aria-pressed", o === b)); draw();
+  });
+  draw();
+})();
+
+/* ---------- dumbbell chart ---------- */
+(function () {
+  const svg = $("#dumb"), NS = "http://www.w3.org/2000/svg";
+  const el = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; };
+  const data = [["CholecT50", 65.2, 69.7], ["HeiChole", 54.3, 64.9], ["MultiBypass", 47.7, 55.1]];
+  const L = 108, R = 500, lo = 40, hi = 75, x = v => L + (v - lo) / (hi - lo) * (R - L);
+  const faint = css("--faint"), rule = css("--rule"), muted = css("--muted"), ink = css("--ink"), acc = css("--dog");
+  [40, 50, 60, 70].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: 14, y2: 178, stroke: rule }); el("text", { x: x(v), y: 198, "text-anchor": "middle", fill: faint, "font-size": 11 }, v); });
+  data.forEach(([n, a, b], i) => {
+    const y = 40 + i * 58;
+    el("text", { x: 0, y: y + 4, fill: ink, "font-size": 12.5 }, n);
+    el("line", { x1: x(a), x2: x(b), y1: y, y2: y, stroke: acc, "stroke-width": 3, opacity: .5 });
+    el("circle", { cx: x(a), cy: y, r: 6, fill: muted });
+    el("circle", { cx: x(b), cy: y, r: 7, fill: acc });
+    el("text", { x: x(a) - 10, y: y + 4, "text-anchor": "end", fill: muted, "font-size": 11.5 }, a.toFixed(1));
+    el("text", { x: x(b) + 12, y: y + 4, fill: ink, "font-size": 12.5, "font-weight": 500 }, b.toFixed(1));
+    el("text", { x: (x(a) + x(b)) / 2, y: y - 12, "text-anchor": "middle", fill: acc, "font-size": 11.5 }, "+" + (b - a).toFixed(1));
+  });
+})();
+
+/* ---------- copy email ---------- */
+$("#copy").addEventListener("click", async e => {
+  const btn = e.currentTarget;
+  try { await navigator.clipboard.writeText($("#email").textContent); btn.textContent = "Copied"; }
+  catch { const r = document.createRange(); r.selectNodeContents($("#email")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected · press Ctrl/⌘C"; }
+  setTimeout(() => btn.textContent = "Copy email", 1800);
+});
+</script>
+
+</body>
+</html>
