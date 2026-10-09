@@ -172,10 +172,10 @@ nav a:hover { color: var(--ink); }
 .stats { display: flex; flex-wrap: wrap; gap: 28px; padding-top: 6px; }
 .stats b { display: block; font-family: var(--f-display); font-stretch: 112%; font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
 .stats small { font-size: 14px; color: var(--muted); }
-.clips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+.clips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
 .clips figure { margin: 0; border-left: 1px solid var(--rule); min-width: 0; }
 .clips figure:first-child { border-left: 0; }
-.clips video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #000; }
+.clips video, .clips img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #000; }
 .clips figcaption { padding: 8px 12px 10px; font: 12px var(--f-mono); color: var(--muted); }
 
 /* surgical */
@@ -403,11 +403,10 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
           <p style="font-size:15px;color:var(--muted)">The inspect target is scored from the agent's own evidence. Memory-reasoning errors are separated from perception errors, and structured memory is compared against last-seen images and MindJourney-generated views.</p>
         </div>
         <div class="console" style="display:grid;align-content:start">
-          <div class="console-bar"><span>what the patrol records · RGB at 15 s virtual-time steps</span></div>
+          <div class="console-bar"><span>what the patrol records · one frame every 15 s of virtual time</span></div>
           <div class="clips">
-            <figure><video src="a/people_walk.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>people walking</figcaption></figure>
-            <figure><video src="a/pt_carry.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>object carried</figcaption></figure>
-            <figure><video src="a/pt_dog.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>dog's patrol view</figcaption></figure>
+            <figure><video src="a/pt_dog.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>Go2 patrolling the kitchen</figcaption></figure>
+            <figure><img src="a/in1_rgb.jpg" alt="Patrol frame, dining area, Friday 18:11" loading="lazy"><figcaption>Fri 18:11 · high budget</figcaption></figure>
           </div>
         </div>
       </div>
@@ -549,11 +548,7 @@ const fmtMin = m => { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 
     ["gnd", "Go2, 8 m from target", "16/9", "The dog's front camera at 0.7 m, 8 m from a casualty stand-in. Depth is metric, which is what the approach controller uses to stop."]
   ];
   const IN = [
-    ["hh1", "Master bedroom", "4/3", "All three household members upstairs. The mask separates each person from furniture, which is how visibility is derived for memory."],
-    ["hh2", "Dining room", "4/3", "Ground floor, one person behind another. Partial occlusion is common and is kept, not cleaned up."],
-    ["hh3", "Hallway, carrying", "4/3", "Dad carrying a briefcase. Moved objects are the hard case for memory: the last place it was seen stops being true."],
-    ["hh4", "Kitchen", "4/3", "Mom in the kitchen. Small objects on counters show up in the mask even when RGB makes them hard to pick out."],
-    ["hh5", "Staircase", "4/3", "Three people on the stairs at different heights. Floor changes are where room-level memory most often breaks."]
+    ["in1", "Dining area · Fri 18:11", "4/3", "A patrol frame from the Friday high-budget run, path-traced and pose-locked. Each household member has their own mask color, which is how visibility is derived for memory."]
   ];
   let scene = "air", mode = "seg", pos = 50;
   const wipe = $("#wipe"), over = $("#w-over"), handle = $("#w-handle"), range = $("#w-range");
@@ -561,7 +556,7 @@ const fmtMin = m => { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 
   function mk(list, el) {
     list.forEach(([id, name]) => {
       const b = document.createElement("button"); b.type = "button"; b.dataset.id = id;
-      b.innerHTML = `<span>${name}</span><small>${id.startsWith("hh") ? "4:3" : "16:9"}</small>`;
+      b.innerHTML = `<span>${name}</span><small>${id.startsWith("in") ? "4:3" : "16:9"}</small>`;
       b.onclick = () => { scene = id; render(); }; el.appendChild(b);
     });
   }
@@ -754,6 +749,5 @@ $("#copy").addEventListener("click", async e => {
   setTimeout(() => btn.textContent = "Copy email", 1800);
 });
 </script>
-
 </body>
 </html>
