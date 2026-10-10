@@ -136,6 +136,13 @@ nav a:hover { color: var(--ink); }
 .io p { font-size: 14px; color: var(--muted); margin-top: 4px; }
 .io code { font: 12px var(--f-mono); color: var(--dog); word-break: break-word; }
 
+/* 4:3 main beside three stacked 16:9 frames: 2.25fr : 1fr makes both columns the same height */
+.crowd-grid { display: grid; grid-template-columns: minmax(0, 2.25fr) minmax(0, 1fr); align-items: start; gap: 2px; background: var(--rule); }
+.crowd-grid img { display: block; width: 100%; height: auto; object-fit: cover; max-width: 100%; }
+.crowd-grid .crowd-main { grid-row: 1 / span 3; aspect-ratio: 4 / 3; }
+.crowd-grid img:not(.crowd-main) { aspect-ratio: 16 / 9; }
+.crowd-cap { padding: 12px 14px 14px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); }
+
 /* environments */
 .envs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .env { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule); background: #000; aspect-ratio: 16 / 9; cursor: pointer; max-width: 100%; }
@@ -228,6 +235,8 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   .tasks { border-right: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
   .tasks button { border-left: 1px solid var(--rule); }
   .envs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crowd-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .crowd-grid .crowd-main { grid-column: 1 / -1; grid-row: auto; }
   .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .loop > a:nth-child(3) { border-left: 0; }
   .loop > a:nth-child(n+3) { border-top: 1px solid var(--rule); }
@@ -329,6 +338,17 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
       </div>
     </div>
 
+    <figure class="console crowd" style="margin:24px 0 0">
+      <div class="console-bar"><span>new scene variant · air–ground handoff with a crowd</span><span>SimWorld · Modular Neighborhood</span></div>
+      <div class="crowd-grid">
+        <img class="crowd-main" src="a/crowd_nadir.jpg" alt="Drone view from 30 m: pedestrians on the road and a fallen person on the grass verge" loading="lazy">
+        <img src="a/crowd_g1.jpg" alt="Street level: a pedestrian on the grass verge" loading="lazy">
+        <img src="a/crowd_g2.jpg" alt="Street level: a pedestrian waving in the road" loading="lazy">
+        <img src="a/crowd_g3.jpg" alt="Street level: a pedestrian on a driveway" loading="lazy">
+      </div>
+      <figcaption class="crowd-cap">Left: the drone's 30 m down-camera. One person lies fallen on the grass verge; the rest are City Sample pedestrians walking, waving or standing. Right: the same street at Go2 eye height. The waving and walking people are distractors, so a policy cannot hand off on "a person is visible" alone.</figcaption>
+    </figure>
+
     <div style="margin-top:48px">
       <div class="eyebrow" style="margin-bottom:14px">8 environments · 2 engines · hover or tap to fly through</div>
       <div class="envs" id="envs"></div>
@@ -393,7 +413,7 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
           <div class="console-bar"><span>what the patrol records · one frame every 15 s of virtual time</span></div>
           <div class="clips">
             <figure><video src="a/pt_dog.mp4" muted loop playsinline autoplay preload="metadata"></video><figcaption>Go2 patrolling the kitchen</figcaption></figure>
-            <figure><img src="a/in1_rgb.jpg" alt="Patrol frame, dining area, Friday 18:11" loading="lazy"><figcaption>Fri 18:11 · high budget</figcaption></figure>
+            <figure><img src="a/v5h1_rgb.jpg" alt="Patrol frame: Dad, Mom and Daughter in the dining area, Friday 18:11" loading="lazy"><figcaption>Fri 18:11 · high budget · dining area</figcaption></figure>
           </div>
         </div>
       </div>
@@ -403,12 +423,12 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   <section id="sensing">
     <div class="sec-head">
       <div><div class="eyebrow">perceive · the observations the policies see</div><h2>Same frame, three sensors</h2></div>
-      <p>Every capture in the SimWorld / UnrealCV pipeline is a pose-locked triplet: RGB, a metric depth map, and an instance mask with one color per actor. Drag across the image to compare.</p>
+      <p>Every capture in the SimWorld / UnrealCV pipeline is a pose-locked triplet: rasterized RGB, a metric depth map, and an instance mask with one color per actor, aligned pixel for pixel. The household people are Unreal City Sample characters, placed so that no body intersects furniture, walls or each other. Drag across the image to compare.</p>
     </div>
     <div class="console sensor">
-      <div class="wipe" id="wipe" style="aspect-ratio:16/9">
-        <img id="w-base" src="a/air_rgb.jpg" alt="RGB frame">
-        <img id="w-over" class="over" src="a/air_seg.jpg" alt="Segmentation of the same frame">
+      <div class="wipe" id="wipe" style="aspect-ratio:4/3">
+        <img id="w-base" src="a/v5h1_rgb.jpg" alt="RGB frame">
+        <img id="w-over" class="over" src="a/v5h1_seg.jpg" alt="Segmentation of the same frame">
         <div class="handle" id="w-handle"></div>
         <span class="tag l">RGB</span><span class="tag r" id="w-tag">SEGMENTATION</span>
         <input type="range" id="w-range" min="0" max="100" value="50" aria-label="Comparison position">
@@ -419,12 +439,12 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
           <button type="button" data-mode="depth" aria-pressed="false">Depth</button>
         </div>
         <div>
-          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
-          <div class="scenes" id="scenes-out"></div>
+          <div class="sublabel" style="margin-bottom:6px">Indoor · household, City Sample people</div>
+          <div class="scenes" id="scenes-in"></div>
         </div>
         <div>
-          <div class="sublabel" style="margin-bottom:6px">Indoor · dynamic household</div>
-          <div class="scenes" id="scenes-in"></div>
+          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
+          <div class="scenes" id="scenes-out"></div>
         </div>
         <p class="note" id="w-note"></p>
       </div>
@@ -548,15 +568,18 @@ const fmtMin = m => { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 
     ["gnd", "Go2, 8 m from target", "16/9", "The dog's front camera at 0.7 m, 8 m from a casualty stand-in. Depth is metric, which is what the approach controller uses to stop."]
   ];
   const IN = [
-    ["in1", "Dining area · Fri 18:11", "4/3", "A patrol frame from the Friday high-budget run, path-traced and pose-locked. Each household member has their own mask color, which is how visibility is derived for memory."]
+    ["v5h1", "Dining area · Fri 18:11", "4/3", "Dad, Mom and Daughter at the dining table on the Friday evening patrol. Each person gets their own mask color; that per-person mask is what the memory benchmark derives visibility from."],
+    ["v5h2", "Master bedroom · Fri 06:25", "4/3", "Early-morning patrol upstairs. The bench in front of the bed is a separate mask instance, so occluders are known per pixel, not guessed."],
+    ["v5h3", "Living room · Fri 18:11", "4/3", "The same moment as the dining shot, seen from the living room on the medium-budget route. Different patrol budgets see the same household state from different places."],
+    ["v5h4", "Stair hall · Sat 21:05", "4/3", "Daughter in the entrance hall under the main stair. Floor changes are where room-level memory most often goes wrong."]
   ];
-  let scene = "air", mode = "seg", pos = 50;
+  let scene = "v5h1", mode = "seg", pos = 50;
   const wipe = $("#wipe"), over = $("#w-over"), handle = $("#w-handle"), range = $("#w-range");
   const all = [...OUT, ...IN];
   function mk(list, el) {
     list.forEach(([id, name]) => {
       const b = document.createElement("button"); b.type = "button"; b.dataset.id = id;
-      b.innerHTML = `<span>${name}</span><small>${id.startsWith("in") ? "4:3" : "16:9"}</small>`;
+      b.innerHTML = `<span>${name}</span><small>${id.startsWith("v5") ? "4:3" : "16:9"}</small>`;
       b.onclick = () => { scene = id; render(); }; el.appendChild(b);
     });
   }
@@ -749,6 +772,5 @@ $("#copy").addEventListener("click", async e => {
   setTimeout(() => btn.textContent = "Copy email", 1800);
 });
 </script>
-
 </body>
 </html>
