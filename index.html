@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Kuncheng (Quin) Wu: VLM post-training (SFT and RL), VLMs as closed-loop robot policies, synthetic data and evaluation for embodied agents.">
 <meta property="og:title" content="Kuncheng Wu Research">
-<meta property="og:description" content="Post-training vision-language models to act.">
+<meta property="og:description" content="Training VLM agents with SFT and RL.">
 <meta property="og:image" content="a/hero_ue.jpg">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Kuncheng Wu Research</title>
@@ -319,10 +319,10 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
       <div>
         <div class="ident">Kuncheng (Quin) Wu <span>· M.S. UC Berkeley ’26 · research with Virginia Tech</span></div>
         <div class="eyebrow" style="margin-top:10px">VLM post-training · RL · embodied agents · <b>UC Berkeley</b></div>
-        <h1 style="margin-top:14px">Post-training vision-language models to <em>act</em>.</h1>
+        <h1 style="margin-top:14px">Training VLM agents with <em>SFT and RL</em>.</h1>
       </div>
       <div>
-        <p class="lede">I train VLMs with <b>SFT and reinforcement learning (GRPO)</b> to call tools on long video, run them as <b>closed-loop policies</b> for drones and quadrupeds, and build the <b>synthetic-data and evaluation infrastructure</b> both depend on.</p>
+        <p class="lede">I post-train VLM agents with <b>SFT and reinforcement learning (GRPO)</b> to look, call tools and answer on long video. Separately, I run prompted VLMs as <b>closed-loop policies</b> for drones and quadrupeds, and build the <b>synthetic-data and evaluation infrastructure</b> behind both.</p>
         <div class="chips">
           <span class="chip on">NeurIPS 2026</span>
           <span class="chip">Accident Analysis &amp; Prevention 2026</span>
@@ -336,6 +336,12 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
       </div>
     </div>
 
+    <div class="kpis" aria-label="Key results">
+      <div><span class="k">full pipeline</span><b>+9.2 <small>pts</small></b><p>9B VLM agent, 65.2 → 74.4 on 2,501 surgical-video questions: tool SFT +4.5, GRPO +1.4, test-time evidence tools +3.3.</p></div>
+      <div><span class="k">RL step alone</span><b>+1.4 <small>pts</small></b><p>GRPO with dynamic sampling, 69.7 → 71.1 (paired McNemar p = .011).</p></div>
+      <div><span class="k">same-model benchmark</span><b>18.5 <small>vs 10.4</small></b><p>ESARBench drone search &amp; rescue success rate, ours vs the APEX baseline, both with DeepSeek-V4.1-Flash.</p></div>
+      <div><span class="k">training infra</span><b>12 <small>× A100</small></b><p>Multi-node GRPO stitched from preemptible Slurm jobs, with checkpoint resume.</p></div>
+    </div>
     <figure class="console" style="margin:0" aria-label="Recorded simulation: a drone searches a street, reports a casualty, and a quadruped walks over to confirm it">
       <div class="console-bar">
         <span>mission · drone search → Go2 handoff → confirm · 40 s sim time</span>
@@ -358,19 +364,7 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     </div>
   </header>
 
-  <div class="kpis" aria-label="Key results">
-    <div><span class="k">SFT → RL</span><b>+9.2 <small>pts</small></b><p>9B VLM agent, 65.2 → 74.4 on 2,501 surgical-video questions, over answer-only SFT on the same questions.</p></div>
-    <div><span class="k">vs frontier LLM</span><b>74.4 <small>vs 73.3</small></b><p>The 9B student against DeepSeek-V4.1-Flash given the same tools (difference not significant).</p></div>
-    <div><span class="k">public benchmark</span><b>18.5 <small>SR</small></b><p>ESARBench UAV search &amp; rescue, 120 tasks. Best published: 13.9.</p></div>
-    <div><span class="k">training infra</span><b>12 <small>× A100</small></b><p>Multi-node GRPO stitched from preemptible Slurm jobs, with checkpoint resume.</p></div>
-  </div>
 
-  <div class="loop" aria-label="Research loop">
-    <a href="#video"><span class="k">post-train</span><h3>SFT, then RL</h3><p>LoRA SFT on 2,955 tool-use trajectories, then GRPO with dynamic sampling.</p></a>
-    <a href="#control"><span class="k">act</span><h3>VLMs as robot policies</h3><p>Qwen, InternVL and DeepSeek driving drones and a Go2, plus a public-benchmark result.</p></a>
-    <a href="#sensing"><span class="k">data</span><h3>Synthetic data &amp; evals</h3><p>Pose-locked RGB, depth and instance masks from Unreal and Isaac Sim, for training and evaluation.</p></a>
-    <a href="#memory"><span class="k">remember</span><h3>Memory that goes stale</h3><p>A three-day household where things move while the robot isn't looking.</p></a>
-  </div>
 
   <section id="video">
     <div class="train">
@@ -425,17 +419,17 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     <figure class="console bench" style="margin-top:24px">
       <div class="about">
         <span class="eyebrow">public benchmark · ESARBench</span>
-        <h3>Drone search &amp; rescue: above every published method</h3>
-        <p>120 UAV search-and-rescue tasks, 324 victims. Our claim → verify → commit agent only reports a victim after a dedicated closer view confirms it, so 93% of its reports are real victims.</p>
+        <h3>Drone search &amp; rescue: 18.5 vs 10.4 with the same model</h3>
+        <p>120 UAV search-and-rescue tasks, 324 victims. With the same VLM, our claim → verify → commit agent reaches a success rate of 18.5 against 10.4 for the APEX baseline. It only reports a victim after a dedicated closer view confirms it, so 93% of its reports are real victims.</p>
       </div>
       <div class="tbl">
         <table>
           <thead><tr><th>Method</th><th>SR</th><th>TSR</th><th>RS</th></tr></thead>
           <tbody>
             <tr class="ours"><td>Claim → verify → commit (ours, DeepSeek-V4.1-Flash)</td><td>18.5</td><td>9.7</td><td>20.0</td></tr>
-            <tr><td>Best published row per metric</td><td>13.9</td><td>3.2</td><td>13.5</td></tr>
             <tr><td>APEX, re-run with the same model</td><td>10.4</td><td>0.8</td><td>13.0</td></tr>
             <tr><td>Plain MLLM agent, same model</td><td>5.6</td><td>2.6</td><td>9.3</td></tr>
+            <tr><td>Best published row per metric (other models, for reference)</td><td>13.9</td><td>3.2</td><td>13.5</td></tr>
           </tbody>
         </table>
         <p class="caveat">Single run per method. Published rows use Qwen3.5-Plus; our agent was tuned on 10 dev tasks from the same maps and makes about 7× more VLM calls. The benchmark does not penalise false reports, which is why report precision is given above.</p>
@@ -563,7 +557,7 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
       </div>
       <div class="pub">
         <div class="venue">AA&amp;P 2026<small>Accident Analysis &amp; Prevention</small></div>
-        <div><h3>Dynamic Prediction of Airport Taxiway Hotspots Using Spatio-Temporal Traffic and Kinematic Risk Modeling</h3>
+        <div><h3>Dynamic Estimation of Airport Taxiway Hotspots Using Spatio-Temporal Traffic and Kinematic Risk Modeling</h3>
         <p>Qing Lyu*, Jinglei Zeng*, <b>Kuncheng Wu</b>*, Jasenka Rakas<sup>†</sup> · <span style="color:var(--dog)">* equal contribution (co-first authors) · † corresponding author</span></p>
         <a class="more" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7102038" target="_blank" rel="noopener">SSRN preprint ↗</a></div>
       </div>
