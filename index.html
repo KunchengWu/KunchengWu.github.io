@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Kuncheng (Quin) Wu: embodied AI at UC Berkeley. VLMs as robot policies, VLM post-training, embodied memory.">
+<meta name="description" content="Kuncheng (Quin) Wu: VLM post-training (SFT and RL), VLMs as closed-loop robot policies, synthetic data and evaluation for embodied agents.">
 <meta property="og:title" content="Kuncheng Wu Research">
-<meta property="og:description" content="Turning vision-language models into robot policies.">
+<meta property="og:description" content="Post-training vision-language models to act.">
 <meta property="og:image" content="a/hero_ue.jpg">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Kuncheng Wu Research</title>
@@ -120,6 +120,44 @@ nav a:hover { color: var(--ink); }
 .side .note { font-size: 14px; color: var(--muted); margin-top: auto; }
 .sublabel { font-family: var(--f-mono); font-size: 11px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; }
 
+
+/* key numbers */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.kpis > div { padding: 16px 18px 18px; border-left: 1px solid var(--rule); background: var(--panel); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.kpis > div:first-child { border-left: 0; }
+.kpis b { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: clamp(26px, 3vw, 34px); line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.kpis b small { font-size: .55em; color: var(--muted); font-weight: 600; }
+.kpis .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dog); }
+.kpis p { font-size: 14px; color: var(--muted); line-height: 1.45; }
+
+/* post-training */
+.train { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px 48px; align-items: start; }
+.train ul { margin: 18px 0 0; padding-left: 18px; color: var(--muted); }
+.train li + li { margin-top: 10px; }
+.train li b { color: var(--ink); font-weight: 600; }
+.pipeline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 18px; }
+.pipeline .arrow { color: var(--faint); font-family: var(--f-mono); font-size: 13px; }
+.figs { display: grid; gap: 20px; min-width: 0; }
+.ladder { padding: 18px 18px 12px; }
+.ladder svg { width: 100%; height: auto; display: block; }
+.ladder text { font-family: var(--f-mono); }
+.fignote { font-size: 13px; color: var(--faint); margin-top: 6px; }
+
+/* public benchmark */
+.bench { margin-top: 24px; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.bench .about { padding: 18px; display: grid; gap: 10px; align-content: start; border-right: 1px solid var(--rule); min-width: 0; }
+.bench .about h3 { font-size: 22px; font-weight: 800; }
+.bench .about p { font-size: 15px; color: var(--muted); }
+.bench .tbl { overflow-x: auto; min-width: 0; }
+.bench table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.bench th, .bench td { padding: 10px 14px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.bench th:first-child, .bench td:first-child { text-align: left; white-space: normal; }
+.bench th { font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.bench tr.ours td { color: var(--ink); font-weight: 600; background: var(--panel-2); }
+.bench tr.ours td:first-child { box-shadow: inset 3px 0 0 var(--dog); }
+.bench td { color: var(--muted); }
+.bench .caveat { padding: 12px 14px 14px; font-size: 13px; color: var(--faint); }
+
 /* closed loop */
 .cl { display: grid; grid-template-columns: 300px minmax(0, 1fr); }
 .tasks { display: grid; align-content: start; border-right: 1px solid var(--rule); }
@@ -228,7 +266,11 @@ nav a:hover { color: var(--ink); }
 footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint); border-top: 1px solid var(--rule); }
 
 @media (max-width: 920px) {
-  .hero-top, .sec-head, .policy, .surg { grid-template-columns: minmax(0, 1fr); }
+  .hero-top, .sec-head, .policy, .surg, .train, .bench { grid-template-columns: minmax(0, 1fr); }
+  .bench .about { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis > div:nth-child(3) { border-left: 0; }
+  .kpis > div:nth-child(n+3) { border-top: 1px solid var(--rule); }
   .sensor, .cl { grid-template-columns: minmax(0, 1fr); }
   .side { border-left: 0; border-top: 1px solid var(--rule); }
   .scenes { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
@@ -245,7 +287,9 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   .others article:first-child { border-top: 0; }
 }
 @media (max-width: 560px) {
-  .loop, .io, .clips, .tasks { grid-template-columns: minmax(0, 1fr); }
+  .loop, .io, .clips, .tasks, .kpis { grid-template-columns: minmax(0, 1fr); }
+  .kpis > div { border-left: 0; border-top: 1px solid var(--rule); }
+  .kpis > div:first-child { border-top: 0; }
   .loop > a { border-left: 0; border-top: 1px solid var(--rule); }
   .loop > a:first-child { border-top: 0; }
   .io > div, .clips figure { border-left: 0; border-top: 1px solid var(--rule); }
@@ -261,10 +305,10 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   <nav>
     <div class="who">Kuncheng Wu <span>/ Quin</span></div>
     <ul>
+      <li><a href="#video">SFT → RL</a></li>
       <li><a href="#control">VLM policies</a></li>
-      <li><a href="#video">Post-training</a></li>
+      <li><a href="#sensing">Sim data</a></li>
       <li><a href="#memory">Memory</a></li>
-      <li><a href="#sensing">Sensing</a></li>
       <li><a href="#publications">Publications</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -274,11 +318,11 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     <div class="hero-top">
       <div>
         <div class="ident">Kuncheng (Quin) Wu <span>· M.S. UC Berkeley ’26 · research with Virginia Tech</span></div>
-        <div class="eyebrow" style="margin-top:10px">Embodied AI · VLM policies · robot learning · <b>UC Berkeley</b></div>
-        <h1 style="margin-top:14px">Vision-language models as <em>robot policies</em>.</h1>
+        <div class="eyebrow" style="margin-top:10px">VLM post-training · RL · embodied agents · <b>UC Berkeley</b></div>
+        <h1 style="margin-top:14px">Post-training vision-language models to <em>act</em>.</h1>
       </div>
       <div>
-        <p class="lede">I put <b>VLMs in the closed control loop</b> of simulated drones and quadrupeds, <b>post-train them</b> on tool-use trajectories (LoRA SFT on a 9B VLM, up to +10.6 points over answer-only SFT), and build benchmarks for when an embodied agent’s memory is still good enough to act on.</p>
+        <p class="lede">I train VLMs with <b>SFT and reinforcement learning (GRPO)</b> to call tools on long video, run them as <b>closed-loop policies</b> for drones and quadrupeds, and build the <b>synthetic-data and evaluation infrastructure</b> both depend on.</p>
         <div class="chips">
           <span class="chip on">NeurIPS 2026</span>
           <span class="chip">Accident Analysis &amp; Prevention 2026</span>
@@ -314,12 +358,52 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     </div>
   </header>
 
-  <div class="loop" aria-label="Research loop">
-    <a href="#control"><span class="k">act</span><h3>VLMs as robot policies</h3><p>Qwen, InternVL and DeepSeek driving navigation, inspection and air–ground handoff.</p></a>
-    <a href="#video"><span class="k">post-train</span><h3>Training VLM agents</h3><p>LoRA SFT of a 9B VLM on 2,955 tool-use trajectories, up to +10.6 points.</p></a>
-    <a href="#memory"><span class="k">remember</span><h3>Memory that goes stale</h3><p>A three-day household where things move while the robot isn't looking.</p></a>
-    <a href="#sensing"><span class="k">perceive</span><h3>Observation pipeline</h3><p>RGB, depth and instance segmentation from the drone and the dog, rendered per frame.</p></a>
+  <div class="kpis" aria-label="Key results">
+    <div><span class="k">SFT → RL</span><b>+9.2 <small>pts</small></b><p>9B VLM agent, 65.2 → 74.4 on 2,501 surgical-video questions, over answer-only SFT on the same questions.</p></div>
+    <div><span class="k">vs frontier LLM</span><b>74.4 <small>vs 73.3</small></b><p>The 9B student against DeepSeek-V4.1-Flash given the same tools (difference not significant).</p></div>
+    <div><span class="k">public benchmark</span><b>18.5 <small>SR</small></b><p>ESARBench UAV search &amp; rescue, 120 tasks. Best published: 13.9.</p></div>
+    <div><span class="k">training infra</span><b>12 <small>× A100</small></b><p>Multi-node GRPO stitched from preemptible Slurm jobs, with checkpoint resume.</p></div>
   </div>
+
+  <div class="loop" aria-label="Research loop">
+    <a href="#video"><span class="k">post-train</span><h3>SFT, then RL</h3><p>LoRA SFT on 2,955 tool-use trajectories, then GRPO with dynamic sampling.</p></a>
+    <a href="#control"><span class="k">act</span><h3>VLMs as robot policies</h3><p>Qwen, InternVL and DeepSeek driving drones and a Go2, plus a public-benchmark result.</p></a>
+    <a href="#sensing"><span class="k">data</span><h3>Synthetic data &amp; evals</h3><p>Pose-locked RGB, depth and instance masks from Unreal and Isaac Sim, for training and evaluation.</p></a>
+    <a href="#memory"><span class="k">remember</span><h3>Memory that goes stale</h3><p>A three-day household where things move while the robot isn't looking.</p></a>
+  </div>
+
+  <section id="video">
+    <div class="train">
+      <div>
+        <div class="eyebrow">post-train · SFT → RL · Virginia Tech CS · ongoing</div>
+        <h2 style="font-size:clamp(30px,4.2vw,50px);font-weight:800;margin-top:10px">Post-training a 9B VLM agent: SFT, then RL</h2>
+        <div class="pipeline" aria-label="Training pipeline">
+          <span class="pill">teacher trajectories</span><span class="arrow">→</span>
+          <span class="pill">LoRA SFT</span><span class="arrow">→</span>
+          <span class="pill inspect">GRPO</span><span class="arrow">→</span>
+          <span class="pill answer">evidence tools at test time</span>
+        </div>
+        <ul>
+          <li><b>SFT.</b> A teacher (DeepSeek with our tools) writes 2,955 multi-turn trajectories on long surgical video; a 9B VLM learns them with LoRA. It calls temporal recognition, event timelines, frame inspection and instrument tools before answering.</li>
+          <li><b>RL.</b> GRPO with an answer-only reward and dynamic sampling: groups where every rollout is right, or every one wrong, carry no gradient and are resampled. Lifts in-domain accuracy 69.7 → 71.1 (p = .011).</li>
+          <li><b>Grounded, not guessing.</b> Swap the fetched frames for frames from elsewhere in the video and cross-hospital accuracy drops 64.9 → 56.5: the agent reads the pixels it asked for.</li>
+          <li><b>Scale.</b> Multi-node torchrun on up to 12 A100s assembled from preemptible Slurm jobs, with heartbeat-guarded checkpoint resume.</li>
+          <li><b>Beyond surgery.</b> The same index-then-inspect idea on general long video: an ASR + caption index adds 11.9 points for an untrained 9B model on a hard 879-question Video-MME subset.</li>
+        </ul>
+      </div>
+      <div class="figs">
+        <figure class="console ladder" style="margin:0">
+          <div class="sublabel" style="margin-bottom:6px">CholecT50 · 2,501 questions · accuracy, %</div>
+          <svg id="ladder" viewBox="0 0 540 250" role="img" aria-label="Accuracy: answer-only SFT 65.2, tool-use SFT 69.7, plus GRPO 71.1, plus evidence tools 74.4; DeepSeek-V4.1-Flash with the same tools 73.3"></svg>
+          <p class="fignote">Every row uses the same 2,501 questions; answer-only SFT is trained on the same 2,955 question IDs as the tool student.</p>
+        </figure>
+        <figure class="console dumb" style="margin:0">
+          <div class="sublabel" style="margin-bottom:6px">Transfer to other hospitals and procedures · answer-only SFT → tool-use student, %</div>
+          <svg id="dumb" viewBox="0 0 520 210" role="img" aria-label="Accuracy rises from 65.2 to 69.7 on CholecT50, 54.3 to 64.9 on HeiChole, and 47.7 to 55.1 on MultiBypass"></svg>
+        </figure>
+      </div>
+    </div>
+  </section>
 
   <section id="control">
     <div class="sec-head">
@@ -337,6 +421,26 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
         </div>
       </div>
     </div>
+
+    <figure class="console bench" style="margin-top:24px">
+      <div class="about">
+        <span class="eyebrow">public benchmark · ESARBench</span>
+        <h3>Drone search &amp; rescue: above every published method</h3>
+        <p>120 UAV search-and-rescue tasks, 324 victims. Our claim → verify → commit agent only reports a victim after a dedicated closer view confirms it, so 93% of its reports are real victims.</p>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Method</th><th>SR</th><th>TSR</th><th>RS</th></tr></thead>
+          <tbody>
+            <tr class="ours"><td>Claim → verify → commit (ours, DeepSeek-V4.1-Flash)</td><td>18.5</td><td>9.7</td><td>20.0</td></tr>
+            <tr><td>Best published row per metric</td><td>13.9</td><td>3.2</td><td>13.5</td></tr>
+            <tr><td>APEX, re-run with the same model</td><td>10.4</td><td>0.8</td><td>13.0</td></tr>
+            <tr><td>Plain MLLM agent, same model</td><td>5.6</td><td>2.6</td><td>9.3</td></tr>
+          </tbody>
+        </table>
+        <p class="caveat">Single run per method. Published rows use Qwen3.5-Plus; our agent was tuned on 10 dev tasks from the same maps and makes about 7× more VLM calls. The benchmark does not penalise false reports, which is why report precision is given above.</p>
+      </div>
+    </figure>
 
     <figure class="console crowd" style="margin:24px 0 0">
       <div class="console-bar"><span>new scene variant · air–ground handoff with a crowd</span><span>SimWorld · Modular Neighborhood</span></div>
@@ -356,21 +460,35 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     </div>
   </section>
 
-  <section id="video">
-    <div class="surg">
-      <div>
-        <div class="eyebrow">post-train · Virginia Tech CS · ongoing</div>
-        <h2 style="font-size:clamp(30px,4.2vw,50px);font-weight:800;margin-top:10px">Post-training a VLM agent to reason with tools</h2>
-        <ul>
-          <li>A 9B VLM fine-tuned with LoRA on <b>2,955 tool-use trajectories</b>, evaluated on <b>3,877 questions</b> of surgical video QA.</li>
-          <li>The agent learns to call <b>temporal recognition, event timelines, targeted frame inspection</b> and instrument-focused tools before it answers.</li>
-          <li>Five-fold cross-fitting plus image-removal and misalignment ablations to study tool errors and transfer across hospitals.</li>
-        </ul>
+
+  <section id="sensing">
+    <div class="sec-head">
+      <div><div class="eyebrow">data · synthetic data &amp; evaluation infrastructure</div><h2>Synthetic data for embodied policies</h2></div>
+      <p>The pipeline replays a scripted world state, poses the robot and renders what it would see: 8,700 snapshot-replay capture jobs for the household alone. Every capture is a pose-locked triplet: rasterized RGB, a metric depth map, and an instance mask with one color per actor, aligned pixel for pixel. The household people are Unreal City Sample characters, placed so that no body intersects furniture, walls or each other. Drag across the image to compare.</p>
+    </div>
+    <div class="console sensor">
+      <div class="wipe" id="wipe" style="aspect-ratio:4/3">
+        <img id="w-base" src="a/v5h1_rgb.jpg" alt="RGB frame">
+        <img id="w-over" class="over" src="a/v5h1_seg.jpg" alt="Segmentation of the same frame">
+        <div class="handle" id="w-handle"></div>
+        <span class="tag l">RGB</span><span class="tag r" id="w-tag">SEGMENTATION</span>
+        <input type="range" id="w-range" min="0" max="100" value="50" aria-label="Comparison position">
       </div>
-      <figure class="console dumb" style="margin:0">
-        <div class="sublabel" style="margin-bottom:6px">Accuracy, % · matched answer-only SFT → tool-augmented</div>
-        <svg id="dumb" viewBox="0 0 520 210" role="img" aria-label="Accuracy rises from 65.2 to 69.7 on CholecT50, 54.3 to 64.9 on HeiChole, and 47.7 to 55.1 on MultiBypass"></svg>
-      </figure>
+      <div class="side">
+        <div class="seg" role="group" aria-label="Compare RGB with">
+          <button type="button" data-mode="seg" aria-pressed="true">Segmentation</button>
+          <button type="button" data-mode="depth" aria-pressed="false">Depth</button>
+        </div>
+        <div>
+          <div class="sublabel" style="margin-bottom:6px">Indoor · household, City Sample people</div>
+          <div class="scenes" id="scenes-in"></div>
+        </div>
+        <div>
+          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
+          <div class="scenes" id="scenes-out"></div>
+        </div>
+        <p class="note" id="w-note"></p>
+      </div>
     </div>
   </section>
 
@@ -420,36 +538,6 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
     </div>
   </section>
 
-  <section id="sensing">
-    <div class="sec-head">
-      <div><div class="eyebrow">perceive · the observations the policies see</div><h2>Same frame, three sensors</h2></div>
-      <p>Every capture in the SimWorld / UnrealCV pipeline is a pose-locked triplet: rasterized RGB, a metric depth map, and an instance mask with one color per actor, aligned pixel for pixel. The household people are Unreal City Sample characters, placed so that no body intersects furniture, walls or each other. Drag across the image to compare.</p>
-    </div>
-    <div class="console sensor">
-      <div class="wipe" id="wipe" style="aspect-ratio:4/3">
-        <img id="w-base" src="a/v5h1_rgb.jpg" alt="RGB frame">
-        <img id="w-over" class="over" src="a/v5h1_seg.jpg" alt="Segmentation of the same frame">
-        <div class="handle" id="w-handle"></div>
-        <span class="tag l">RGB</span><span class="tag r" id="w-tag">SEGMENTATION</span>
-        <input type="range" id="w-range" min="0" max="100" value="50" aria-label="Comparison position">
-      </div>
-      <div class="side">
-        <div class="seg" role="group" aria-label="Compare RGB with">
-          <button type="button" data-mode="seg" aria-pressed="true">Segmentation</button>
-          <button type="button" data-mode="depth" aria-pressed="false">Depth</button>
-        </div>
-        <div>
-          <div class="sublabel" style="margin-bottom:6px">Indoor · household, City Sample people</div>
-          <div class="scenes" id="scenes-in"></div>
-        </div>
-        <div>
-          <div class="sublabel" style="margin-bottom:6px">Outdoor · neighborhood</div>
-          <div class="scenes" id="scenes-out"></div>
-        </div>
-        <p class="note" id="w-note"></p>
-      </div>
-    </div>
-  </section>
 
   <section id="more">
     <div class="sec-head">
@@ -742,6 +830,30 @@ const fmtMin = m => { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 
     budget = b.dataset.b; document.querySelectorAll("#budget button").forEach(o => o.setAttribute("aria-pressed", o === b)); draw();
   });
   draw();
+})();
+
+/* ---------- SFT -> RL ladder ---------- */
+(function () {
+  const svg = $("#ladder"), NS = "http://www.w3.org/2000/svg";
+  const el = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; };
+  const rows = [["Answer-only SFT", 65.2], ["Tool-use SFT", 69.7], ["+ GRPO", 71.1], ["+ evidence tools", 74.4]];
+  const L = 150, R = 500, lo = 62, hi = 76, x = v => L + (v - lo) / (hi - lo) * (R - L);
+  const faint = css("--faint"), rule = css("--rule"), muted = css("--muted"), ink = css("--ink"), acc = css("--dog"), ref = css("--drone");
+  [62, 66, 70, 74].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: 12, y2: 214, stroke: rule }); el("text", { x: x(v), y: 236, "text-anchor": "middle", fill: faint, "font-size": 11 }, v); });
+  const ds = 73.3;
+  el("line", { x1: x(ds), x2: x(ds), y1: 12, y2: 214, stroke: ref, "stroke-width": 1.5, "stroke-dasharray": "4 4" });
+  el("text", { x: x(ds) - 6, y: 24, "text-anchor": "end", fill: ref, "font-size": 11 }, "DeepSeek-V4.1-Flash + same tools 73.3");
+  let prev = null;
+  rows.forEach(([n, v], i) => {
+    const y = 52 + i * 48, last = i === rows.length - 1;
+    el("text", { x: 0, y: y + 4, fill: i ? ink : muted, "font-size": 12.5 }, n);
+    el("line", { x1: L, x2: x(v), y1: y, y2: y, stroke: last ? acc : muted, "stroke-width": 2, opacity: last ? .55 : .3 });
+    if (prev) el("line", { x1: x(prev[1]), x2: x(prev[1]), y1: prev[0], y2: y, stroke: acc, "stroke-width": 1, opacity: .45 });
+    el("circle", { cx: x(v), cy: y, r: last ? 7.5 : 6, fill: i ? acc : muted });
+    el("text", { x: x(v) + 12, y: y + 4, fill: ink, "font-size": 12.5, "font-weight": 500 }, v.toFixed(1));
+    if (prev) el("text", { x: (x(prev[1]) + x(v)) / 2, y: y - 10, "text-anchor": "middle", fill: acc, "font-size": 11 }, "+" + (v - prev[2]).toFixed(1));
+    prev = [y, v, v];
+  });
 })();
 
 /* ---------- dumbbell chart ---------- */
