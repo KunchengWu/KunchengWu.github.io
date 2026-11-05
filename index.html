@@ -619,7 +619,7 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 /* play a video only while it is on screen (and never before it is needed) */
 function playWhenVisible(v, threshold = .3) {
-  new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting && v.dataset.poster && !v.poster) v.poster = v.dataset.poster; }), { rootMargin: "600px" }).observe(v);
+  new IntersectionObserver((es, o) => es.forEach(e => { if (!e.isIntersecting) return; if (v.dataset.poster && !v.poster) v.poster = v.dataset.poster; if (reduce && !v.src && v.dataset.src) v.src = v.dataset.src; }), { rootMargin: "600px" }).observe(v);
   if (reduce) { v.controls = true; return; }
   new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); }
