@@ -517,13 +517,13 @@ footer { padding-block: 28px 44px; font: 12px var(--f-mono); color: var(--faint)
   <section id="benchmarks">
     <div class="sec-head">
       <div><div class="eyebrow">benchmarks on these worlds · Virginia Tech, Xuan Wang group × SCEL</div><h2>What runs on top</h2></div>
-      <p>The worlds exist to test robot teams. Each number below compares two settings in the same scenes; falls, resets and false reports are counted rather than hidden.</p>
+      <p>The worlds exist to test robot teams. Below is the scale of what runs on them; results from these studies will be posted once the papers are out.</p>
     </div>
-    <div class="kpis" aria-label="Benchmark results">
-      <div><span class="k">physics vs teleport</span><b>8.7 % <small>vs 3.6 %</small></b><p>Victims confirmed by the physical team vs teleporting robots on ESARBench (110 vs 114 episodes), 0 false confirms over 1,634 km of flight.</p></div>
-      <div><span class="k">team protocol</span><b>45 % <small>vs 6 %</small></b><p>Casualties confirmed with a structured claim → verify → commit drone–dog team vs free LLM-to-LLM chat (216 episodes, 8 arms).</p></div>
-      <div><span class="k">Husky + LLM planner</span><b>14 / 14</b><p>Missions completed with scripted perception; 10–12 / 14 with VLM perception. The gap is perception, not planning.</p></div>
-      <div><span class="k">VLM controllers</span><b>13 / 16 <small>vs 3 / 16</small></b><p>Crowded Isaac Sim handoffs: DeepSeek-V4.1-Flash vs a Qwen3-VL-8B search arm. 24 / 24 negative episodes rejected.</p></div>
+    <div class="kpis" aria-label="Benchmark scale">
+      <div><span class="k">ESARBench + Isaac physics</span><b>224 <small>episodes</small></b><p>All 120 official rescue tasks (4 maps, 324 victims) run with a flown drone, a policy-driven Go2 and a Husky: 110 physical and 114 teleporting-robot episodes, with every fall logged.</p></div>
+      <div><span class="k">ranch triage benchmark</span><b>509 <small>episodes</small></b><p>Mass-casualty scenes with 5, 15 or 30 casualties on a 1 km² map, across 4 coordination strategies; plus 216 episodes over 8 arms on 12 thermal search scenes.</p></div>
+      <div><span class="k">Husky + LLM planner</span><b>14 <small>missions</small></b><p>Yard and trail missions for a Husky A200 built from URDF, with a 16-beam lidar and RGB-D camera, run with scripted and with VLM perception.</p></div>
+      <div><span class="k">Isaac Sim handoffs</span><b>73 <small>episodes</small></b><p>Rivermark testbed: 56 drone → Go2 handoff episodes over 4 layouts with crowds and decoys, plus 17 multi-casualty episodes.</p></div>
     </div>
 
     <div class="console cl">
